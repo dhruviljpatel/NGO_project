@@ -3,7 +3,7 @@ import { Heart } from "lucide-react"
 
 export function Footer() {
   return (
-    <footer className="bg-foreground text-background py-12 mt-auto">
+    <footer className="bg-foreground text-background py-8 mt-auto">
       <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="md:col-span-2">
           <Link to="/" className="flex items-center gap-2 font-bold text-xl text-primary-foreground mb-4">
@@ -31,7 +31,7 @@ export function Footer() {
           </ul>
         </div>
       </div>
-      <div className="container mx-auto px-4 mt-12 pt-8 border-t border-background/20 text-center text-sm text-muted/60">
+      <div className="container mx-auto px-4 mt-8 pt-4 border-t border-background/20 text-center text-sm text-muted/60">
         &copy; {new Date().getFullYear()} HopeBridge Foundation. All rights reserved.
       </div>
     </footer>
