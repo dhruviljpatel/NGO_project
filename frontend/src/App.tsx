@@ -47,7 +47,7 @@ function HomePage() {
         backgroundAttachment: 'fixed'
       }}
     >
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-[2px]"></div>
+      <div className="absolute inset-0 bg-background/50"></div>
       
       <div className="container mx-auto px-4 relative z-10">
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground mb-6 drop-shadow-sm">
