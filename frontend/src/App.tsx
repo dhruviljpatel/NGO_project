@@ -2,6 +2,11 @@ import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom"
 import { Navbar } from "./components/Navbar"
 import { Footer } from "./components/Footer"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { AuthProvider } from "./lib/auth"
+import { Login } from "./pages/Login"
+import { Register } from "./pages/Register"
+import { DashboardLayout } from "./components/DashboardLayout"
+import { Dashboard } from "./pages/Dashboard"
 
 // Create a client
 const queryClient = new QueryClient()
@@ -42,14 +47,24 @@ function HomePage() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<RootLayout />}>
-            <Route index element={<HomePage />} />
-            {/* Other routes will be added here */}
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<RootLayout />}>
+              <Route index element={<HomePage />} />
+              <Route path="login" element={<Login />} />
+              <Route path="register" element={<Register />} />
+            </Route>
+
+            {/* Protected Dashboard Routes */}
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<Dashboard />} />
+              {/* Other dashboard routes will go here */}
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </QueryClientProvider>
   )
 }
