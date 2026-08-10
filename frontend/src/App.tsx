@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Outlet, useLocation } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Outlet, useLocation, Link } from "react-router-dom"
+import { Button } from "@/components/ui/button"
 import { Navbar } from "./components/Navbar"
 import { Footer } from "./components/Footer"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -44,12 +45,12 @@ function HomePage() {
         Join the HopeBridge Foundation in making a real impact. Volunteer for events, donate to projects, and help us build a better future.
       </p>
       <div className="flex justify-center gap-4">
-        <a href="/register" className="inline-flex h-12 items-center justify-center rounded-md bg-accent px-8 text-sm font-medium text-accent-foreground shadow transition-colors hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          Join as Volunteer
-        </a>
-        <a href="/donate" className="inline-flex h-12 items-center justify-center rounded-md border border-input bg-background px-8 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          Make a Donation
-        </a>
+        <Button size="lg" asChild>
+          <Link to="/register">Join as Volunteer</Link>
+        </Button>
+        <Button variant="outline" size="lg" asChild>
+          <Link to="/donate">Make a Donation</Link>
+        </Button>
       </div>
     </div>
   )
