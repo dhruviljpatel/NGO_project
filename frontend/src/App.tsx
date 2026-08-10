@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Outlet, useLocation } from "react-router-dom"
 import { Navbar } from "./components/Navbar"
 import { Footer } from "./components/Footer"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -20,11 +20,13 @@ import { Reports } from "./pages/Reports"
 // Create a client
 const queryClient = new QueryClient()
 
-function RootLayout() {
+const RootLayout = () => {
+  const location = useLocation()
+  
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-background text-foreground">
+    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
       <Navbar />
-      <main className="flex-1">
+      <main key={location.pathname} className="flex-1 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <Outlet />
       </main>
       <Footer />
