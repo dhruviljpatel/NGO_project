@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useAuth } from "@/lib/auth"
 import { Navigate } from "react-router-dom"
+import { useMockData } from "@/lib/MockDataContext"
 import {
   Table,
   TableBody,
@@ -11,34 +12,70 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { toast } from "sonner"
 
-const MOCK_EVENTS = [
-  {
-    id: "1",
-    name: "School Book Distribution",
-    date: "25 August 2026",
-    location: "Ahmedabad",
-    requiredVolunteers: 20,
-    registeredVolunteers: 15,
-    status: "Upcoming",
-  },
-  {
-    id: "2",
-    name: "Community Food Drive",
-    date: "10 September 2026",
-    location: "Surat",
-    requiredVolunteers: 50,
-    registeredVolunteers: 50,
-    status: "Full",
-  }
-]
+const eventSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters."),
+  date: z.string().min(1, "Date is required."),
+  location: z.string().min(2, "Location must be at least 2 characters."),
+  requiredVolunteers: z.coerce.number().min(1, "Must require at least 1 volunteer."),
+  description: z.string().min(10, "Description must be at least 10 characters."),
+  status: z.enum(["Upcoming", "Open for Registration", "Full", "Completed", "Cancelled"]),
+})
 
 export function ManageEvents() {
   const { user } = useAuth()
-  const [events] = useState(MOCK_EVENTS)
+  const { events, setEvents } = useMockData()
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+
+  const form = useForm<z.infer<typeof eventSchema>>({
+    resolver: zodResolver(eventSchema),
+    defaultValues: {
+      name: "",
+      date: "",
+      location: "",
+      requiredVolunteers: 10,
+      description: "",
+      status: "Upcoming",
+    },
+  })
 
   if (user?.role !== 'Admin' && user?.role !== 'NGO Staff') {
     return <Navigate to="/dashboard" replace />
+  }
+
+  function onSubmit(values: z.infer<typeof eventSchema>) {
+    const newEvent = {
+      id: crypto.randomUUID(),
+      ...values,
+      registeredVolunteers: 0,
+    }
+    setEvents([...events, newEvent])
+    toast.success("Event created successfully!")
+    setIsCreateOpen(false)
+    form.reset()
   }
 
   return (
@@ -48,10 +85,123 @@ export function ManageEvents() {
           <h1 className="text-3xl font-bold tracking-tight">Manage Events</h1>
           <p className="text-muted-foreground">Create and manage NGO events and attendance.</p>
         </div>
-        <Button>Create Event</Button>
+        
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <DialogTrigger asChild>
+            <Button>Create Event</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Create New Event</DialogTitle>
+              <DialogDescription>
+                Add a new event to the platform. Fill in the details below.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Event Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. School Book Distribution" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Location</FormLabel>
+                        <FormControl>
+                          <Input placeholder="City or Venue" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="requiredVolunteers"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Required Volunteers</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Upcoming">Upcoming</SelectItem>
+                            <SelectItem value="Open for Registration">Open for Registration</SelectItem>
+                            <SelectItem value="Full">Full</SelectItem>
+                            <SelectItem value="Completed">Completed</SelectItem>
+                            <SelectItem value="Cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Details about the event..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end pt-4">
+                  <Button type="submit">Save Event</Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -64,23 +214,65 @@ export function ManageEvents() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {events.map((event) => (
-              <TableRow key={event.id}>
-                <TableCell className="font-medium">{event.name}</TableCell>
-                <TableCell>{event.date}</TableCell>
-                <TableCell>{event.location}</TableCell>
-                <TableCell>{event.registeredVolunteers} / {event.requiredVolunteers}</TableCell>
-                <TableCell>
-                  <Badge variant={event.status === 'Upcoming' ? 'default' : 'secondary'}>
-                    {event.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button variant="outline" size="sm">Attendance</Button>
-                  <Button variant="outline" size="sm">Edit</Button>
+            {events.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center text-muted-foreground h-24">
+                  No events found. Create one to get started.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              events.map((event) => (
+                <TableRow key={event.id}>
+                  <TableCell className="font-medium">{event.name}</TableCell>
+                  <TableCell>{event.date}</TableCell>
+                  <TableCell>{event.location}</TableCell>
+                  <TableCell>{event.registeredVolunteers || 0} / {event.requiredVolunteers}</TableCell>
+                  <TableCell>
+                    <Badge variant={event.status === 'Upcoming' ? 'default' : 'secondary'}>
+                      {event.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">Attendance</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Mark Attendance</DialogTitle>
+                          <DialogDescription>
+                            Record attendance for {event.name}.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div className="text-sm text-muted-foreground mb-4">
+                            Note: This is a mocked list for demonstration.
+                          </div>
+                          {[1, 2, 3].map((i) => (
+                            <div key={i} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
+                              <div className="font-medium text-sm">Volunteer {i}</div>
+                              <Select defaultValue="Present">
+                                <SelectTrigger className="w-[120px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Present">Present</SelectItem>
+                                  <SelectItem value="Absent">Absent</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex justify-end mt-4">
+                          <Button onClick={() => toast.success("Attendance saved!")}>Save Attendance</Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    <Button variant="outline" size="sm">Edit</Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

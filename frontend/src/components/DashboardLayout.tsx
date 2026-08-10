@@ -78,8 +78,10 @@ export function DashboardLayout() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 md:p-8 overflow-auto">
-        <Outlet />
+      <main className="flex-1 p-6 md:p-8 overflow-auto relative">
+        <div key={location.pathname} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <Outlet />
+        </div>
       </main>
     </div>
   )
