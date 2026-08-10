@@ -13,6 +13,7 @@ import { Volunteers } from "./pages/Volunteers"
 import { Projects } from "./pages/Projects"
 import { Donations } from "./pages/Donations"
 import { Beneficiaries } from "./pages/Beneficiaries"
+import { Reports } from "./pages/Reports"
 
 // Create a client
 const queryClient = new QueryClient()
@@ -73,6 +74,7 @@ function App() {
               <Route path="projects" element={<Projects />} />
               <Route path="donations" element={<Donations />} />
               <Route path="beneficiaries" element={<Beneficiaries />} />
+              <Route path="reports" element={<Reports />} />
               {/* Other dashboard routes will go here */}
             </Route>
           </Routes>
