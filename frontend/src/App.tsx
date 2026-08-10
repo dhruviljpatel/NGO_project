@@ -60,7 +60,7 @@ function HomePage() {
           <Button size="lg" asChild className="shadow-lg hover:shadow-xl">
             <Link to="/register">Join as Volunteer</Link>
           </Button>
-          <Button variant="outline" size="lg" asChild className="bg-background/80 hover:bg-background shadow-lg hover:shadow-xl border-primary/20 hover:border-primary">
+          <Button variant="outline" size="lg" asChild className="bg-background/80 shadow-lg hover:shadow-xl">
             <Link to="/donate">Make a Donation</Link>
           </Button>
         </div>
