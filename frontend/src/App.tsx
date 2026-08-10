@@ -7,6 +7,9 @@ import { Login } from "./pages/Login"
 import { Register } from "./pages/Register"
 import { DashboardLayout } from "./components/DashboardLayout"
 import { Dashboard } from "./pages/Dashboard"
+import { Events } from "./pages/Events"
+import { ManageEvents } from "./pages/ManageEvents"
+import { Volunteers } from "./pages/Volunteers"
 
 // Create a client
 const queryClient = new QueryClient()
@@ -55,11 +58,14 @@ function App() {
               <Route index element={<HomePage />} />
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
+              <Route path="events" element={<Events />} />
             </Route>
 
             {/* Protected Dashboard Routes */}
             <Route path="/dashboard" element={<DashboardLayout />}>
               <Route index element={<Dashboard />} />
+              <Route path="events" element={<ManageEvents />} />
+              <Route path="volunteers" element={<Volunteers />} />
               {/* Other dashboard routes will go here */}
             </Route>
           </Routes>
