@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export function Register() {
   const navigate = useNavigate()
@@ -61,16 +62,16 @@ export function Register() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="role">I want to join as a</Label>
-              <select 
-                id="role"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={role}
-                onChange={(e) => setRole(e.target.value as Role)}
-              >
-                <option value="Volunteer">Volunteer</option>
-                <option value="Donor">Donor</option>
-              </select>
+              <Label>I want to join as a</Label>
+              <Select value={role} onValueChange={(value) => setRole(value as Role)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Volunteer">Volunteer</SelectItem>
+                  <SelectItem value="Donor">Donor</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
           <CardFooter>
