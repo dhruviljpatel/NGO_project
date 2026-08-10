@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Outlet, useLocation, Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
+import bgImage from "./assets/background.webp"
 import { Navbar } from "./components/Navbar"
 import { Footer } from "./components/Footer"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -37,20 +38,32 @@ const RootLayout = () => {
 
 function HomePage() {
   return (
-    <div className="container mx-auto px-4 flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] text-center py-12">
-      <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground mb-6">
-        Empowering Communities, <span className="text-primary">Together.</span>
-      </h1>
-      <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-        Join the HopeBridge Foundation in making a real impact. Volunteer for events, donate to projects, and help us build a better future.
-      </p>
-      <div className="flex justify-center gap-4">
-        <Button size="lg" asChild>
-          <Link to="/register">Join as Volunteer</Link>
-        </Button>
-        <Button variant="outline" size="lg" asChild>
-          <Link to="/donate">Make a Donation</Link>
-        </Button>
+    <div 
+      className="relative flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] text-center py-12 -mt-4 w-full"
+      style={{
+        backgroundImage: `url(${bgImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      <div className="absolute inset-0 bg-background/80 backdrop-blur-[2px]"></div>
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground mb-6 drop-shadow-sm">
+          Empowering Communities, <span className="text-primary">Together.</span>
+        </h1>
+        <p className="text-xl text-foreground/90 max-w-2xl mx-auto mb-10 font-medium drop-shadow-sm">
+          Join the HopeBridge Foundation in making a real impact. Volunteer for events, donate to projects, and help us build a better future.
+        </p>
+        <div className="flex justify-center gap-4">
+          <Button size="lg" asChild className="shadow-lg hover:shadow-xl">
+            <Link to="/register">Join as Volunteer</Link>
+          </Button>
+          <Button variant="outline" size="lg" asChild className="bg-background/80 hover:bg-background shadow-lg hover:shadow-xl border-primary/20 hover:border-primary">
+            <Link to="/donate">Make a Donation</Link>
+          </Button>
+        </div>
       </div>
     </div>
   )
