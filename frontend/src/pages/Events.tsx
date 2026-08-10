@@ -4,11 +4,13 @@ import { useMockData } from "@/lib/MockDataContext"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, MapPin, Users } from "lucide-react"
+import { Calendar, MapPin, Users, ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
+import { useNavigate } from "react-router-dom"
 
 export function Events() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const { events, setEvents } = useMockData()
   const [registered, setRegistered] = useState<Record<string, boolean>>({})
 
@@ -36,6 +38,12 @@ export function Events() {
 
   return (
     <div className="container mx-auto py-8">
+      <div>
+        <Button variant="ghost" className="mb-4 -ml-4" onClick={() => navigate(-1)}>
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back
+        </Button>
+      </div>
+      
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Events</h1>
         <p className="text-muted-foreground">Discover and register for upcoming volunteer opportunities.</p>
@@ -74,7 +82,7 @@ export function Events() {
               </CardContent>
               <CardFooter>
                 <Button 
-                  className="w-full hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md" 
+                  className="w-full gap-2" 
                   disabled={event.status === "Full" || registered[event.id] || (user && user.role !== 'Volunteer')}
                   onClick={() => handleRegister(event.id)}
                 >

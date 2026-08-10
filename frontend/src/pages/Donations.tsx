@@ -5,9 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Heart } from "lucide-react"
+import { Heart, ArrowLeft } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
+import { useNavigate } from "react-router-dom"
 import {
   Table,
   TableBody,
@@ -20,6 +21,7 @@ import { Badge } from "@/components/ui/badge"
 
 export function Donations() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const { projects, donations, setDonations } = useMockData()
   const [amount, setAmount] = useState("")
   const [selectedProject, setSelectedProject] = useState("General Fund")
@@ -44,18 +46,25 @@ export function Donations() {
   }
 
   const isAdminOrStaff = user?.role === 'Admin' || user?.role === 'NGO Staff'
+  const isDonor = user?.role === 'Donor'
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
+    <div className="space-y-8 max-w-5xl mx-auto flex flex-col min-h-[calc(100vh-12rem)] justify-center py-8">
+      <div>
+        <Button variant="ghost" className="mb-4 -ml-4" onClick={() => navigate(-1)}>
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back
+        </Button>
+      </div>
+
       {!isAdminOrStaff ? (
-        <>
+        <div className="flex flex-col flex-1 justify-center space-y-8">
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold tracking-tight">Make a Donation</h1>
             <p className="text-muted-foreground">Your contribution helps us continue our mission and support communities in need.</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            <Card>
+          <div className={`grid gap-8 w-full ${isDonor ? 'md:grid-cols-2' : 'max-w-md mx-auto'}`}>
+            <Card className="w-full">
               <CardHeader>
                 <CardTitle>One-time Donation</CardTitle>
                 <CardDescription>Support our general fund to be used where it's needed most.</CardDescription>
@@ -97,7 +106,6 @@ export function Donations() {
                         type="button" 
                         variant="outline" 
                         onClick={() => setAmount(preset.toString())}
-                        className="hover:-translate-y-0.5 transition-all"
                       >
                         ${preset}
                       </Button>
@@ -105,15 +113,15 @@ export function Donations() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button type="submit" className="w-full gap-2 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md">
+                  <Button type="submit" className="w-full gap-2">
                     <Heart className="w-4 h-4" /> Donate Now
                   </Button>
                 </CardFooter>
               </form>
             </Card>
 
-            {user?.role === 'Donor' && (
-              <Card>
+            {isDonor && (
+              <Card className="w-full h-fit">
                 <CardHeader>
                   <CardTitle>Your Impact</CardTitle>
                   <CardDescription>Thank you for your continued support.</CardDescription>
@@ -137,9 +145,9 @@ export function Donations() {
               </Card>
             )}
           </div>
-        </>
+        </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-6 w-full">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Donations</h1>
