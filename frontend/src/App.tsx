@@ -10,6 +10,9 @@ import { Dashboard } from "./pages/Dashboard"
 import { Events } from "./pages/Events"
 import { ManageEvents } from "./pages/ManageEvents"
 import { Volunteers } from "./pages/Volunteers"
+import { Projects } from "./pages/Projects"
+import { Donations } from "./pages/Donations"
+import { Beneficiaries } from "./pages/Beneficiaries"
 
 // Create a client
 const queryClient = new QueryClient()
@@ -59,6 +62,7 @@ function App() {
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
               <Route path="events" element={<Events />} />
+              <Route path="donate" element={<Donations />} />
             </Route>
 
             {/* Protected Dashboard Routes */}
@@ -66,6 +70,9 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="events" element={<ManageEvents />} />
               <Route path="volunteers" element={<Volunteers />} />
+              <Route path="projects" element={<Projects />} />
+              <Route path="donations" element={<Donations />} />
+              <Route path="beneficiaries" element={<Beneficiaries />} />
               {/* Other dashboard routes will go here */}
             </Route>
           </Routes>
