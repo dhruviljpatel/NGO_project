@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { useAuth } from "@/lib/auth"
 import { Navigate } from "react-router-dom"
-import { useMockData } from "@/lib/MockDataContext"
 import {
   Table,
   TableBody,
@@ -35,6 +34,8 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { toast } from "sonner"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { getEvents, createEvent } from "@/services/events.service"
 
 const eventSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -42,13 +43,31 @@ const eventSchema = z.object({
   location: z.string().min(2, "Location must be at least 2 characters."),
   requiredVolunteers: z.coerce.number().min(1, "Must require at least 1 volunteer."),
   description: z.string().min(10, "Description must be at least 10 characters."),
-  status: z.enum(["Upcoming", "Open for Registration", "Full", "Completed", "Cancelled"]),
+  status: z.enum(["Upcoming", "Open for Registration", "Full", "Completed", "Cancelled"]).optional(),
 })
 
 export function ManageEvents() {
   const { user } = useAuth()
-  const { events, setEvents } = useMockData()
+  const queryClient = useQueryClient()
   const [isCreateOpen, setIsCreateOpen] = useState(false)
+
+  const { data: events = [], isLoading } = useQuery({
+    queryKey: ['events'],
+    queryFn: getEvents,
+  })
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => createEvent(data),
+    onSuccess: () => {
+      toast.success("Event created successfully!")
+      setIsCreateOpen(false)
+      form.reset()
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to create event")
+    }
+  })
 
   const form = useForm<z.infer<typeof eventSchema>>({
     resolver: zodResolver(eventSchema),
@@ -62,20 +81,16 @@ export function ManageEvents() {
     },
   })
 
-  if (user?.role !== 'Admin' && user?.role !== 'NGO Staff') {
+  if (user?.role !== 'ADMIN' && user?.role !== 'NGO_STAFF') {
     return <Navigate to="/dashboard" replace />
   }
 
   function onSubmit(values: z.infer<typeof eventSchema>) {
-    const newEvent = {
-      id: crypto.randomUUID(),
-      ...values,
-      registeredVolunteers: 0,
-    }
-    setEvents([...events, newEvent])
-    toast.success("Event created successfully!")
-    setIsCreateOpen(false)
-    form.reset()
+    // Format date if needed, though backend should accept string date
+    createMutation.mutate({
+        ...values,
+        date: new Date(values.date).toISOString()
+    })
   }
 
   return (
@@ -193,7 +208,9 @@ export function ManageEvents() {
                   )}
                 />
                 <div className="flex justify-end pt-4">
-                  <Button type="submit">Save Event</Button>
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending ? "Saving..." : "Save Event"}
+                  </Button>
                 </div>
               </form>
             </Form>
@@ -214,17 +231,23 @@ export function ManageEvents() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {events.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center text-muted-foreground h-24">
+                  Loading events...
+                </TableCell>
+              </TableRow>
+            ) : events.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-muted-foreground h-24">
                   No events found. Create one to get started.
                 </TableCell>
               </TableRow>
             ) : (
-              events.map((event) => (
+              events.map((event: any) => (
                 <TableRow key={event.id}>
                   <TableCell className="font-medium">{event.name}</TableCell>
-                  <TableCell>{event.date}</TableCell>
+                  <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
                   <TableCell>{event.location}</TableCell>
                   <TableCell>{event.registeredVolunteers || 0} / {event.requiredVolunteers}</TableCell>
                   <TableCell>

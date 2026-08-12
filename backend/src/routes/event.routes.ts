@@ -7,10 +7,9 @@ import { Role } from '@prisma/client';
 
 const router = Router();
 
-router.use(protect);
-
 router.post(
   '/',
+  protect,
   requireRole([Role.ADMIN, Role.NGO_STAFF]),
   validate(createEventSchema),
   eventController.createEvent
@@ -26,6 +25,7 @@ router.get('/:id', eventController.getEventById);
 
 router.patch(
   '/:id',
+  protect,
   requireRole([Role.ADMIN, Role.NGO_STAFF]),
   validate(updateEventSchema),
   eventController.updateEvent
@@ -33,12 +33,14 @@ router.patch(
 
 router.post(
   '/:id/register',
+  protect,
   requireRole([Role.ADMIN, Role.NGO_STAFF, Role.VOLUNTEER]),
   eventController.registerForEvent
 );
 
 router.delete(
   '/:id/register',
+  protect,
   requireRole([Role.ADMIN, Role.NGO_STAFF, Role.VOLUNTEER]),
   eventController.cancelRegistration
 );

@@ -1,8 +1,12 @@
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Heart } from "lucide-react"
 import { Button } from "./ui/button"
+import { useAuth } from "@/lib/auth"
 
 export function Navbar() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
   return (
     <nav className="border-b bg-background sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -18,12 +22,25 @@ export function Navbar() {
             Donate
           </Link>
           <div className="h-4 w-px bg-border" />
-          <Button variant="ghost" asChild>
-            <Link to="/login">Login</Link>
-          </Button>
-          <Button asChild>
-            <Link to="/register">Register</Link>
-          </Button>
+          {user ? (
+            <>
+              <Button variant="ghost" asChild>
+                <Link to="/dashboard">Dashboard</Link>
+              </Button>
+              <Button onClick={() => { logout(); navigate('/'); }}>
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" asChild>
+                <Link to="/login">Login</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/register">Register</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </nav>

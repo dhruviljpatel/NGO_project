@@ -1,28 +1,37 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth, type Role } from '@/lib/auth'
+import { useState, useEffect } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { toast } from 'sonner'
 
 export function Login() {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { user, login } = useAuth()
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState<Role>('Volunteer')
+  const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard')
+    }
+  }, [user, navigate])
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Mock login logic
-    login({
-      id: Math.random().toString(36).substr(2, 9),
-      name: email.split('@')[0],
-      email,
-      role
-    })
-    navigate('/dashboard')
+    setIsLoading(true)
+    try {
+      await login({ email, password })
+      toast.success('Logged in successfully')
+      navigate('/dashboard')
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to login')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -34,7 +43,7 @@ export function Login() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Welcome back</CardTitle>
-          <CardDescription>Enter your email to login to your account</CardDescription>
+          <CardDescription>Enter your email and password to login</CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
@@ -50,23 +59,23 @@ export function Login() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Role (Mock)</Label>
-              <Select value={role} onValueChange={(value) => setRole(value as Role)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Admin">Admin</SelectItem>
-                  <SelectItem value="NGO Staff">NGO Staff</SelectItem>
-                  <SelectItem value="Volunteer">Volunteer</SelectItem>
-                  <SelectItem value="Donor">Donor</SelectItem>
-                  <SelectItem value="Beneficiary">Beneficiary</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="password">Password</Label>
+              <Input 
+                id="password" 
+                type="password" 
+                required 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
           </CardContent>
-          <CardFooter>
-            <Button type="submit" className="w-full">Login</Button>
+          <CardFooter className="flex flex-col gap-4">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Login"}
+            </Button>
+            <p className="text-sm text-center text-muted-foreground">
+              Don't have an account? <Link to="/register" className="text-primary hover:underline">Register</Link>
+            </p>
           </CardFooter>
         </form>
       </Card>

@@ -13,8 +13,8 @@ export function DashboardLayout() {
 
   const getLinksForRole = () => {
     switch (user.role) {
-      case 'Admin':
-      case 'NGO Staff':
+      case 'ADMIN':
+      case 'NGO_STAFF':
         return [
           { name: "Overview", path: "/dashboard", icon: LayoutDashboard },
           { name: "Volunteers", path: "/dashboard/volunteers", icon: Users },
@@ -24,14 +24,15 @@ export function DashboardLayout() {
           { name: "Beneficiaries", path: "/dashboard/beneficiaries", icon: Users },
           { name: "Reports", path: "/dashboard/reports", icon: FileText },
         ]
-      case 'Volunteer':
+      case 'VOLUNTEER':
         return [
           { name: "My Dashboard", path: "/dashboard", icon: LayoutDashboard },
           { name: "Available Events", path: "/events", icon: Calendar },
         ]
-      case 'Donor':
+      case 'DONOR':
         return [
-          { name: "My Donations", path: "/dashboard", icon: Heart },
+          { name: "Overview", path: "/dashboard", icon: LayoutDashboard },
+          { name: "My Donations", path: "/dashboard/donations", icon: Heart },
           { name: "Projects", path: "/dashboard/projects", icon: Briefcase },
         ]
       default:
@@ -48,7 +49,7 @@ export function DashboardLayout() {
       {/* Sidebar */}
       <aside className="w-64 border-r bg-muted/30 p-4 flex flex-col gap-2 hidden md:flex">
         <div className="mb-4 px-2">
-          <h2 className="text-lg font-semibold">{user.name}</h2>
+          <h2 className="text-lg font-semibold">{user.name || user.email}</h2>
           <p className="text-sm text-muted-foreground">{user.role}</p>
         </div>
         <nav className="flex-1 space-y-1">

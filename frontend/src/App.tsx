@@ -5,7 +5,6 @@ import { Navbar } from "./components/Navbar"
 import { Footer } from "./components/Footer"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { AuthProvider } from "./lib/auth"
-import { MockDataProvider } from "./lib/MockDataContext"
 import { Toaster } from "@/components/ui/sonner"
 import { Login } from "./pages/Login"
 import { Register } from "./pages/Register"
@@ -72,37 +71,36 @@ function HomePage() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <MockDataProvider>
-        <AuthProvider>
-          <BrowserRouter>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<RootLayout />}>
-                <Route index element={<HomePage />} />
-                <Route path="login" element={<Login />} />
-                <Route path="register" element={<Register />} />
-                <Route path="events" element={<Events />} />
-                <Route path="donate" element={<Donations />} />
-              </Route>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<RootLayout />}>
+              <Route index element={<HomePage />} />
+              <Route path="login" element={<Login />} />
+              <Route path="register" element={<Register />} />
+              <Route path="events" element={<Events />} />
+              <Route path="donate" element={<Donations />} />
+            </Route>
 
-              {/* Protected Dashboard Routes */}
-              <Route path="/dashboard" element={<DashboardLayout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="events" element={<ManageEvents />} />
-                <Route path="volunteers" element={<Volunteers />} />
-                <Route path="projects" element={<Projects />} />
-                <Route path="donations" element={<Donations />} />
-                <Route path="beneficiaries" element={<Beneficiaries />} />
-                <Route path="reports" element={<Reports />} />
-                {/* Other dashboard routes will go here */}
-              </Route>
-            </Routes>
-          </BrowserRouter>
-          <Toaster position="top-right" />
-        </AuthProvider>
-      </MockDataProvider>
+            {/* Protected Dashboard Routes */}
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="events" element={<ManageEvents />} />
+              <Route path="volunteers" element={<Volunteers />} />
+              <Route path="projects" element={<Projects />} />
+              <Route path="donations" element={<Donations />} />
+              <Route path="beneficiaries" element={<Beneficiaries />} />
+              <Route path="reports" element={<Reports />} />
+              {/* Other dashboard routes will go here */}
+            </Route>
+          </Routes>
+        </BrowserRouter>
+        <Toaster position="top-right" />
+      </AuthProvider>
     </QueryClientProvider>
   )
 }
 
 export default App
+

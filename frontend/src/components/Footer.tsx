@@ -19,7 +19,7 @@ export function Footer() {
           <ul className="space-y-2">
             <li><Link to="/events" className="hover:text-accent transition-colors">Events</Link></li>
             <li><Link to="/donate" className="hover:text-accent transition-colors">Donate</Link></li>
-            <li><Link to="/volunteer" className="hover:text-accent transition-colors">Become a Volunteer</Link></li>
+            <li><Link to="/register" className="hover:text-accent transition-colors">Become a Volunteer</Link></li>
           </ul>
         </div>
         <div>

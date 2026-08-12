@@ -1,6 +1,5 @@
 import { useState } from "react"
 import { useAuth } from "@/lib/auth"
-import { useMockData } from "@/lib/MockDataContext"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -29,26 +28,48 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { toast } from "sonner"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { getProjects, createProject } from "@/services/projects.service"
 
 const projectSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
-  goal: z.string().min(10, "Goal must be at least 10 characters."),
+  goal: z.string().min(10, "Goal must be at least 10 characters.").optional(),
+  description: z.string().min(10, "Description must be at least 10 characters.").optional(),
   startDate: z.string().min(1, "Start Date is required."),
   endDate: z.string().min(1, "End Date is required."),
   targetBeneficiaries: z.coerce.number().min(1, "Target must be at least 1."),
-  status: z.enum(["Active", "Completed", "Planning"]),
+  status: z.enum(["Active", "Completed", "Planning"]).optional(),
 })
 
 export function Projects() {
   const { user } = useAuth()
-  const { projects, setProjects } = useMockData()
+  const queryClient = useQueryClient()
   const [isAddOpen, setIsAddOpen] = useState(false)
+
+  const { data: projects = [], isLoading } = useQuery({
+    queryKey: ['projects'],
+    queryFn: getProjects,
+  })
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => createProject(data),
+    onSuccess: () => {
+      toast.success("Project created successfully!")
+      setIsAddOpen(false)
+      form.reset()
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to create project")
+    }
+  })
 
   const form = useForm<z.infer<typeof projectSchema>>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
       name: "",
       goal: "",
+      description: "",
       startDate: "",
       endDate: "",
       targetBeneficiaries: 100,
@@ -57,15 +78,11 @@ export function Projects() {
   })
 
   function onSubmit(values: z.infer<typeof projectSchema>) {
-    const newProject = {
-      id: crypto.randomUUID(),
+    createMutation.mutate({
       ...values,
-      currentBeneficiaries: 0,
-    }
-    setProjects([...projects, newProject])
-    toast.success("Project created successfully!")
-    setIsAddOpen(false)
-    form.reset()
+      startDate: new Date(values.startDate).toISOString(),
+      endDate: new Date(values.endDate).toISOString(),
+    })
   }
 
   return (
@@ -75,7 +92,7 @@ export function Projects() {
           <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
           <p className="text-muted-foreground">Monitor ongoing and past initiatives.</p>
         </div>
-        {(user?.role === 'Admin' || user?.role === 'NGO Staff') && (
+        {(user?.role === 'ADMIN' || user?.role === 'NGO_STAFF') && (
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
             <DialogTrigger asChild>
               <Button>Create Project</Button>
@@ -180,8 +197,23 @@ export function Projects() {
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Project Description</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Details about this project..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <div className="flex justify-end pt-4">
-                    <Button type="submit">Save Project</Button>
+                    <Button type="submit" disabled={createMutation.isPending}>
+                      {createMutation.isPending ? "Saving..." : "Save Project"}
+                    </Button>
                   </div>
                 </form>
               </Form>
@@ -190,14 +222,19 @@ export function Projects() {
         )}
       </div>
 
-      {projects.length === 0 ? (
+      {isLoading ? (
+        <div className="text-center p-8 border rounded-lg bg-card text-muted-foreground">
+          Loading projects...
+        </div>
+      ) : projects.length === 0 ? (
         <div className="text-center p-8 border rounded-lg bg-card text-muted-foreground">
           No projects found.
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2">
-          {projects.map((project) => {
-            const progressPercent = Math.min(100, Math.round((project.currentBeneficiaries / project.targetBeneficiaries) * 100))
+          {projects.map((project: any) => {
+            const currentCount = project.beneficiaries?.length || 0;
+            const progressPercent = Math.min(100, Math.round((currentCount / project.targetBeneficiaries) * 100))
             
             return (
               <Card key={project.id} className="flex flex-col">
@@ -206,23 +243,25 @@ export function Projects() {
                     <Badge variant={project.status === "Completed" ? "secondary" : "default"}>
                       {project.status}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">{project.startDate} - {project.endDate}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(project.startDate).toLocaleDateString()} - {new Date(project.endDate).toLocaleDateString()}
+                    </span>
                   </div>
                   <CardTitle>{project.name}</CardTitle>
-                  <CardDescription>{project.goal || project.name}</CardDescription>
+                  <CardDescription>{project.description || project.name}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 space-y-4">
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Beneficiaries Reached</span>
-                      <span className="font-medium">{project.currentBeneficiaries} / {project.targetBeneficiaries}</span>
+                      <span className="font-medium">{currentCount} / {project.targetBeneficiaries}</span>
                     </div>
                     <Progress value={progressPercent} className="h-2" />
                   </div>
                 </CardContent>
                 <CardFooter className="gap-2">
                   <Button variant="outline" className="w-full hover:-translate-y-0.5 transition-all">View Details</Button>
-                  {user?.role === 'Donor' && project.status === 'Active' && (
+                  {user?.role === 'DONOR' && project.status === 'Active' && (
                     <Button className="w-full hover:-translate-y-0.5 transition-all" asChild>
                       <Link to={`/dashboard/donate?project=${project.id}`}>Support Project</Link>
                     </Button>

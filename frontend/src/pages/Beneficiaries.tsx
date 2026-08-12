@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { useAuth } from "@/lib/auth"
 import { Navigate } from "react-router-dom"
-import { useMockData } from "@/lib/MockDataContext"
 import {
   Table,
   TableBody,
@@ -34,18 +33,45 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { toast } from "sonner"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { getBeneficiaries, createBeneficiary } from "@/services/beneficiaries.service"
+import { getProjects } from "@/services/projects.service"
 
 const beneficiarySchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   location: z.string().min(2, "Location must be at least 2 characters."),
   program: z.string().min(2, "Needs must be at least 2 characters."),
-  status: z.enum(["Supported", "Pending", "In Progress", "Active", "Completed"]),
+  status: z.enum(["Supported", "Pending", "In Progress", "Active", "Completed"]).optional(),
+  projectId: z.string().optional(),
 })
 
 export function Beneficiaries() {
   const { user } = useAuth()
-  const { beneficiaries, setBeneficiaries } = useMockData()
+  const queryClient = useQueryClient()
   const [isAddOpen, setIsAddOpen] = useState(false)
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: getProjects,
+  })
+
+  const { data: beneficiaries = [], isLoading } = useQuery({
+    queryKey: ['beneficiaries'],
+    queryFn: getBeneficiaries,
+  })
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => createBeneficiary(data),
+    onSuccess: () => {
+      toast.success("Beneficiary added successfully!")
+      setIsAddOpen(false)
+      form.reset()
+      queryClient.invalidateQueries({ queryKey: ['beneficiaries'] })
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to add beneficiary")
+    }
+  })
 
   const form = useForm<z.infer<typeof beneficiarySchema>>({
     resolver: zodResolver(beneficiarySchema),
@@ -57,20 +83,15 @@ export function Beneficiaries() {
     },
   })
 
-  if (user?.role !== 'Admin' && user?.role !== 'NGO Staff') {
+  if (user?.role !== 'ADMIN' && user?.role !== 'NGO_STAFF') {
     return <Navigate to="/dashboard" replace />
   }
 
   function onSubmit(values: z.infer<typeof beneficiarySchema>) {
-    const newBeneficiary = {
-      id: crypto.randomUUID(),
-      age: 0,
+    createMutation.mutate({
       ...values,
-    }
-    setBeneficiaries([...beneficiaries, newBeneficiary])
-    toast.success("Beneficiary added successfully!")
-    setIsAddOpen(false)
-    form.reset()
+      needs: values.program,
+    })
   }
 
   return (
@@ -135,6 +156,28 @@ export function Beneficiaries() {
                 />
                 <FormField
                   control={form.control}
+                  name="projectId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project (Optional)</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a project" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {projects.map((p: any) => (
+                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
                   name="status"
                   render={({ field }) => (
                     <FormItem>
@@ -158,7 +201,9 @@ export function Beneficiaries() {
                   )}
                 />
                 <div className="flex justify-end pt-4">
-                  <Button type="submit">Save Beneficiary</Button>
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending ? "Saving..." : "Save Beneficiary"}
+                  </Button>
                 </div>
               </form>
             </Form>
@@ -178,21 +223,27 @@ export function Beneficiaries() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {beneficiaries.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground h-24">
+                  Loading beneficiaries...
+                </TableCell>
+              </TableRow>
+            ) : beneficiaries.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center text-muted-foreground h-24">
                   No beneficiaries found.
                 </TableCell>
               </TableRow>
             ) : (
-              beneficiaries.map((ben) => (
+              beneficiaries.map((ben: any) => (
                 <TableRow key={ben.id}>
-                  <TableCell className="font-medium">{ben.name}</TableCell>
-                  <TableCell>{ben.location}</TableCell>
-                  <TableCell>{ben.program || ben.needs}</TableCell>
+                  <TableCell className="font-medium">{ben.name || ben.user?.email}</TableCell>
+                  <TableCell>{ben.location || 'N/A'}</TableCell>
+                  <TableCell>{ben.needs || ben.program || 'N/A'}</TableCell>
                   <TableCell>
                     <Badge variant={ben.status === 'Supported' || ben.status === 'Completed' || ben.status === 'Active' ? 'default' : ben.status === 'Pending' ? 'destructive' : 'secondary'}>
-                      {ben.status}
+                      {ben.status || 'Unknown'}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right space-x-2">

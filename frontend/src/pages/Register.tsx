@@ -1,29 +1,40 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth, type Role } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { toast } from 'sonner'
 
 export function Register() {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { user, register } = useAuth()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState<Role>('Volunteer')
+  const [password, setPassword] = useState('')
+  const [role, setRole] = useState<Role>('VOLUNTEER')
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleRegister = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard')
+    }
+  }, [user, navigate])
+
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Mock registration logic
-    login({
-      id: Math.random().toString(36).substr(2, 9),
-      name,
-      email,
-      role
-    })
-    navigate('/dashboard')
+    setIsLoading(true)
+    try {
+      await register({ name, email, password, role })
+      toast.success('Registered successfully')
+      navigate('/dashboard')
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to register')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -62,20 +73,36 @@ export function Register() {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input 
+                id="password" 
+                type="password" 
+                required 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
               <Label>I want to join as a</Label>
               <Select value={role} onValueChange={(value) => setRole(value as Role)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Volunteer">Volunteer</SelectItem>
-                  <SelectItem value="Donor">Donor</SelectItem>
+                  <SelectItem value="VOLUNTEER">Volunteer</SelectItem>
+                  <SelectItem value="DONOR">Donor</SelectItem>
+                  <SelectItem value="BENEFICIARY">Beneficiary</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </CardContent>
-          <CardFooter>
-            <Button type="submit" className="w-full">Register</Button>
+          <CardFooter className="flex flex-col gap-4">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Registering..." : "Register"}
+            </Button>
+            <p className="text-sm text-center text-muted-foreground">
+              Already have an account? <Link to="/login" className="text-primary hover:underline">Login</Link>
+            </p>
           </CardFooter>
         </form>
       </Card>

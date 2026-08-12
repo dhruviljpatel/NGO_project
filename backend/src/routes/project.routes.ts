@@ -10,10 +10,9 @@ import { Role } from '@prisma/client';
 
 const router = Router();
 
-router.use(protect);
-
 router.post(
   '/',
+  protect,
   requireRole([Role.ADMIN, Role.NGO_STAFF]),
   validate(createProjectSchema),
   projectController.createProject
@@ -29,6 +28,7 @@ router.get('/:id', projectController.getProjectById);
 
 router.patch(
   '/:id',
+  protect,
   requireRole([Role.ADMIN, Role.NGO_STAFF]),
   validate(updateProjectSchema),
   projectController.updateProject
@@ -36,6 +36,7 @@ router.patch(
 
 router.post(
   '/:id/volunteers',
+  protect,
   requireRole([Role.ADMIN, Role.NGO_STAFF]),
   validate(assignVolunteerSchema),
   projectController.assignVolunteer
@@ -43,6 +44,7 @@ router.post(
 
 router.post(
   '/:id/beneficiaries',
+  protect,
   requireRole([Role.ADMIN, Role.NGO_STAFF]),
   validate(assignBeneficiarySchema),
   projectController.assignBeneficiary

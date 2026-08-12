@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress"
 export function Reports() {
   const { user } = useAuth()
 
-  if (user?.role !== 'Admin') {
+  if (user?.role !== 'ADMIN') {
     return <Navigate to="/dashboard" replace />
   }
 

@@ -1,6 +1,5 @@
 import { useState } from "react"
 import { useAuth } from "@/lib/auth"
-import { useMockData } from "@/lib/MockDataContext"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Heart, ArrowLeft } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import {
   Table,
   TableBody,
@@ -18,13 +17,39 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { getDonations, createDonation } from "@/services/donations.service"
+import { getProjects } from "@/services/projects.service"
 
 export function Donations() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { projects, donations, setDonations } = useMockData()
+  const queryClient = useQueryClient()
   const [amount, setAmount] = useState("")
-  const [selectedProject, setSelectedProject] = useState("General Fund")
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("general")
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: getProjects,
+  })
+
+  const { data: donations = [], isLoading: isLoadingDonations } = useQuery({
+    queryKey: ['donations'],
+    queryFn: getDonations,
+    enabled: !!user,
+  })
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => createDonation(data),
+    onSuccess: (_, variables) => {
+      toast.success(`Thank you for your generous donation of $${variables.amount}!`)
+      setAmount("")
+      queryClient.invalidateQueries({ queryKey: ['donations'] })
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to process donation")
+    }
+  })
 
   const handleDonate = (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,21 +57,16 @@ export function Donations() {
       toast.error("Please enter a valid donation amount")
       return
     }
-    const newDonation = {
-      id: `DON-${Math.floor(Math.random() * 10000)}`,
-      donor: user?.name || "Guest",
-      amount: `$${Number(amount).toFixed(2)}`,
-      date: new Date().toISOString().split('T')[0],
-      project: selectedProject,
-      status: "Success",
-    }
-    setDonations([newDonation, ...donations])
-    toast.success(`Thank you for your generous donation of $${amount}!`)
-    setAmount("")
+
+    createMutation.mutate({
+      amount: Number(amount),
+      paymentMethod: 'CREDIT_CARD', // Added to satisfy backend validation
+      projectId: selectedProjectId === 'general' ? undefined : selectedProjectId,
+    })
   }
 
-  const isAdminOrStaff = user?.role === 'Admin' || user?.role === 'NGO Staff'
-  const isDonor = user?.role === 'Donor'
+  const isAdminOrStaff = user?.role === 'ADMIN' || user?.role === 'NGO_STAFF'
+  const isDonor = user?.role === 'DONOR'
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto flex flex-col min-h-[calc(100vh-12rem)] justify-center py-8">
@@ -56,7 +76,23 @@ export function Donations() {
         </Button>
       </div>
 
-      {!isAdminOrStaff ? (
+      {!user ? (
+        <div className="flex flex-col items-center justify-center flex-1 space-y-6 text-center">
+          <Heart className="w-16 h-16 text-primary mb-4" />
+          <h1 className="text-3xl font-bold tracking-tight">Login to Donate</h1>
+          <p className="text-muted-foreground max-w-md">
+            To make a donation and track your impact, you need to be logged into your HopeBridge account.
+          </p>
+          <div className="flex gap-4 pt-4">
+            <Button asChild size="lg">
+              <Link to="/login">Login</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link to="/register">Create an Account</Link>
+            </Button>
+          </div>
+        </div>
+      ) : !isAdminOrStaff ? (
         <div className="flex flex-col flex-1 justify-center space-y-8">
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold tracking-tight">Make a Donation</h1>
@@ -73,14 +109,14 @@ export function Donations() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label>Select Project</Label>
-                    <Select value={selectedProject} onValueChange={setSelectedProject}>
+                    <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                       <SelectTrigger>
                         <SelectValue placeholder="General Fund" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="General Fund">General Fund</SelectItem>
-                        {projects.map(p => (
-                          <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
+                        <SelectItem value="general">General Fund</SelectItem>
+                        {projects.map((p: any) => (
+                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -113,8 +149,8 @@ export function Donations() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button type="submit" className="w-full gap-2">
-                    <Heart className="w-4 h-4" /> Donate Now
+                  <Button type="submit" className="w-full gap-2" disabled={createMutation.isPending}>
+                    <Heart className="w-4 h-4" /> {createMutation.isPending ? "Processing..." : "Donate Now"}
                   </Button>
                 </CardFooter>
               </form>
@@ -130,15 +166,15 @@ export function Donations() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center py-2 border-b">
                       <span className="text-muted-foreground">Total Donated</span>
-                      <span className="font-bold text-xl">$1,250</span>
+                      <span className="font-bold text-xl">
+                        ${donations.reduce((acc: number, d: any) => acc + d.amount, 0).toFixed(2)}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b">
                       <span className="text-muted-foreground">Projects Supported</span>
-                      <span className="font-bold text-xl">3</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-muted-foreground">Member Since</span>
-                      <span className="font-bold text-xl">2024</span>
+                      <span className="font-bold text-xl">
+                        {new Set(donations.map((d: any) => d.projectId)).size}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -168,22 +204,28 @@ export function Donations() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {donations.length === 0 ? (
+                {isLoadingDonations ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground h-24">
+                      Loading donations...
+                    </TableCell>
+                  </TableRow>
+                ) : donations.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground h-24">
                       No donations found.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  donations.map((don) => (
+                  donations.map((don: any) => (
                     <TableRow key={don.id}>
-                      <TableCell className="font-medium">{don.id}</TableCell>
-                      <TableCell>{don.donor}</TableCell>
-                      <TableCell>{don.project}</TableCell>
-                      <TableCell className="font-bold text-green-600 dark:text-green-500">{don.amount}</TableCell>
-                      <TableCell>{don.date}</TableCell>
+                      <TableCell className="font-medium">{don.id.substring(0, 8)}...</TableCell>
+                      <TableCell>{don.donor?.name || 'Anonymous'}</TableCell>
+                      <TableCell>{don.project?.name || 'General Fund'}</TableCell>
+                      <TableCell className="font-bold text-green-600 dark:text-green-500">${don.amount}</TableCell>
+                      <TableCell>{new Date(don.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
-                        <Badge variant={don.status === 'Success' ? 'default' : 'secondary'}>
+                        <Badge variant={don.status === 'SUCCESSFUL' ? 'default' : don.status === 'PENDING' ? 'secondary' : 'destructive'}>
                           {don.status}
                         </Badge>
                       </TableCell>
