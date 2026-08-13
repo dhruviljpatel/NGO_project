@@ -25,9 +25,13 @@ const RootLayout = () => {
   const location = useLocation()
   
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
+    <div className="relative min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300 overflow-hidden">
+      {/* Light Ambient Blobs */}
+      <div className="pointer-events-none fixed top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[128px] -z-10 mix-blend-multiply"></div>
+      <div className="pointer-events-none fixed bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-secondary/20 rounded-full blur-[128px] -z-10 mix-blend-multiply"></div>
+      
       <Navbar />
-      <main key={location.pathname} className="flex-1 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <main key={location.pathname} className="flex-1 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <Outlet />
       </main>
       <Footer />
@@ -38,30 +42,41 @@ const RootLayout = () => {
 function HomePage() {
   return (
     <div 
-      className="relative flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] text-center py-12 -mt-4 w-full"
-      style={{
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed'
-      }}
+      className="relative flex flex-col items-center lg:items-start justify-center min-h-[100dvh] py-20 -mt-16 w-full overflow-hidden"
     >
-      <div className="absolute inset-0 bg-background/50"></div>
+      <div 
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: `url(${bgImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+          filter: 'grayscale(20%)'
+        }}
+      >
+        <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px] dark:bg-background/80"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent dark:from-background dark:via-background/90"></div>
+      </div>
       
-      <div className="container mx-auto px-4 relative z-10">
-        <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground mb-6 drop-shadow-sm">
-          Empowering Communities, <span className="text-primary">Together.</span>
-        </h1>
-        <p className="text-xl text-foreground/90 max-w-2xl mx-auto mb-10 font-medium drop-shadow-sm">
-          Join the HopeBridge Foundation in making a real impact. Volunteer for events, donate to projects, and help us build a better future.
-        </p>
-        <div className="flex justify-center gap-4">
-          <Button size="lg" asChild className="shadow-lg hover:shadow-xl">
-            <Link to="/register">Join as Volunteer</Link>
-          </Button>
-          <Button variant="outline" size="lg" asChild className="bg-background/80 shadow-lg hover:shadow-xl">
-            <Link to="/donate">Make a Donation</Link>
-          </Button>
+      <div className="container mx-auto px-6 relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+        <div className="flex flex-col items-center lg:items-start text-center lg:text-left space-y-8 animate-in slide-in-from-bottom-8 fade-in duration-1000 fill-mode-both">
+          <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-sm font-medium text-primary backdrop-blur-sm">
+            ✨ Joining forces for a better tomorrow
+          </div>
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground drop-shadow-sm leading-[1.1] text-balance">
+            Empowering Communities, <br/><span className="text-primary italic font-serif">Together.</span>
+          </h1>
+          <p className="text-lg md:text-xl text-foreground/80 max-w-xl font-medium drop-shadow-sm text-balance">
+            Join the HopeBridge Foundation in making a real impact. Volunteer for events, donate to projects, and help us build a better future.
+          </p>
+          <div className="flex flex-wrap justify-center lg:justify-start gap-4 pt-4">
+            <Button size="lg" asChild className="h-12 px-8 rounded-full shadow-xl shadow-primary/20 hover:-translate-y-1">
+              <Link to="/register">Join as Volunteer</Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild className="h-12 px-8 rounded-full bg-background/50 backdrop-blur-md shadow-lg hover:-translate-y-1">
+              <Link to="/donate">Make a Donation</Link>
+            </Button>
+          </div>
         </div>
       </div>
     </div>

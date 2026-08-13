@@ -47,7 +47,7 @@ export function DashboardLayout() {
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
       {/* Sidebar */}
-      <aside className="w-64 border-r bg-muted/30 p-4 flex flex-col gap-2 hidden md:flex">
+      <aside className="w-64 border-r border-white/50 bg-background/60 backdrop-blur-xl shadow-[1px_0_10px_rgba(0,0,0,0.02)] z-10 p-4 flex flex-col gap-2 hidden md:flex">
         <div className="mb-4 px-2">
           <h2 className="text-lg font-semibold">{user.name || user.email}</h2>
           <p className="text-sm text-muted-foreground">{user.role}</p>

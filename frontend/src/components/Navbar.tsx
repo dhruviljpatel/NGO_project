@@ -8,35 +8,35 @@ export function Navbar() {
   const navigate = useNavigate()
 
   return (
-    <nav className="border-b bg-background sticky top-0 z-50">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 font-bold text-xl text-primary">
-          <Heart className="h-6 w-6 text-accent" fill="currentColor" />
-          HopeBridge
+    <nav className="glass-panel sticky top-0 z-50 transition-all duration-300">
+      <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2 font-bold text-2xl tracking-tight text-foreground">
+          <Heart className="h-6 w-6 text-primary fill-primary" />
+          Hope<span className="text-primary font-serif italic">Bridge</span>
         </Link>
-        <div className="flex items-center gap-4">
-          <Link to="/events" className="text-sm font-medium hover:text-primary transition-colors">
+        <div className="flex items-center gap-6">
+          <Link to="/events" className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors">
             Events
           </Link>
-          <Link to="/donate" className="text-sm font-medium hover:text-primary transition-colors">
+          <Link to="/donate" className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors">
             Donate
           </Link>
-          <div className="h-4 w-px bg-border" />
+          <div className="h-4 w-px bg-border/50" />
           {user ? (
             <>
-              <Button variant="ghost" asChild>
+              <Button variant="ghost" className="font-semibold text-foreground/80 hover:text-primary" asChild>
                 <Link to="/dashboard">Dashboard</Link>
               </Button>
-              <Button onClick={() => { logout(); navigate('/'); }}>
+              <Button variant="outline" className="rounded-full px-6" onClick={() => { logout(); navigate('/'); }}>
                 Logout
               </Button>
             </>
           ) : (
             <>
-              <Button variant="ghost" asChild>
+              <Button variant="ghost" className="font-semibold text-foreground/80 hover:text-primary" asChild>
                 <Link to="/login">Login</Link>
               </Button>
-              <Button asChild>
+              <Button className="rounded-full px-6 shadow-md shadow-primary/20 hover:-translate-y-0.5" asChild>
                 <Link to="/register">Register</Link>
               </Button>
             </>

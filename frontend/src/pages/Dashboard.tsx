@@ -28,45 +28,48 @@ export function Dashboard() {
   const activeProjectsCount = projects.filter((p: any) => p.status === 'Active').length
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back, {user?.name || user?.email}. Here's what's happening.</p>
+    <div className="space-y-8 animate-in slide-in-from-bottom-4 fade-in duration-700">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-4xl font-bold tracking-tight text-balance">Dashboard</h1>
+        <p className="text-foreground/70 text-lg">Welcome back, <span className="font-semibold text-foreground">{user?.name || user?.email}</span>. Here's what's happening.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+      <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-12">
+        <Card className="lg:col-span-5 hover:-translate-y-1 transition-transform duration-300">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-foreground/70 uppercase tracking-wider">
               {user?.role === 'VOLUNTEER' ? 'Total Hours' : 'Total Volunteers'}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-5xl font-bold tracking-tighter text-primary">
               {user?.role === 'VOLUNTEER' ? '0' : isLoadingVolunteers ? '...' : volunteers.length}
             </div>
+            <p className="text-sm text-foreground/60 mt-2">Currently registered in the system</p>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
+        <Card className="lg:col-span-4 hover:-translate-y-1 transition-transform duration-300 bg-primary text-primary-foreground border-transparent shadow-lg shadow-primary/20">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-primary-foreground/80 uppercase tracking-wider">Upcoming Events</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-5xl font-bold tracking-tighter">
               {isLoadingEvents ? '...' : upcomingEventsCount}
             </div>
+            <p className="text-sm text-primary-foreground/80 mt-2">Events requiring attention</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
+        <Card className="lg:col-span-3 hover:-translate-y-1 transition-transform duration-300">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-foreground/70 uppercase tracking-wider">Active Projects</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-4xl font-bold tracking-tighter">
               {isLoadingProjects ? '...' : activeProjectsCount}
             </div>
+            <p className="text-sm text-foreground/60 mt-2">Ongoing initiatives</p>
           </CardContent>
         </Card>
       </div>
