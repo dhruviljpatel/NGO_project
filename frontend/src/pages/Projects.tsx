@@ -1,8 +1,8 @@
 import { useState } from "react"
 import { useAuth } from "@/lib/auth"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Calendar, Heart } from "lucide-react"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import { Link } from "react-router-dom"
 import {
@@ -29,22 +29,25 @@ import {
 } from "@/components/ui/form"
 import { toast } from "sonner"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { getProjects, createProject } from "@/services/projects.service"
+import { getProjects, createProject, updateProject } from "@/services/projects.service"
 
 const projectSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
-  goal: z.string().min(10, "Goal must be at least 10 characters.").optional(),
-  description: z.string().min(10, "Description must be at least 10 characters.").optional(),
+  goal: z.string().optional(),
+  description: z.string().min(2, "Description must be at least 2 characters."),
   startDate: z.string().min(1, "Start Date is required."),
-  endDate: z.string().min(1, "End Date is required."),
+  endDate: z.string().optional(),
   targetBeneficiaries: z.coerce.number().min(1, "Target must be at least 1."),
-  status: z.enum(["Active", "Completed", "Planning"]).optional(),
+  status: z.enum(["ACTIVE", "COMPLETED"]).optional(),
 })
 
 export function Projects() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const [isAddOpen, setIsAddOpen] = useState(false)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [selectedProject, setSelectedProject] = useState<any>(null)
+  const [isViewOpen, setIsViewOpen] = useState(false)
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['projects'],
@@ -55,12 +58,26 @@ export function Projects() {
     mutationFn: (data: any) => createProject(data),
     onSuccess: () => {
       toast.success("Project created successfully!")
-      setIsAddOpen(false)
+      setIsFormOpen(false)
       form.reset()
       queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to create project")
+    }
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: (data: any) => updateProject(selectedProject?.id, data),
+    onSuccess: () => {
+      toast.success("Project updated successfully!")
+      setIsFormOpen(false)
+      form.reset()
+      setSelectedProject(null)
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to update project")
     }
   })
 
@@ -73,35 +90,80 @@ export function Projects() {
       startDate: "",
       endDate: "",
       targetBeneficiaries: 100,
-      status: "Planning",
+      status: "ACTIVE",
     },
   })
 
   function onSubmit(values: z.infer<typeof projectSchema>) {
-    createMutation.mutate({
-      ...values,
+    const payload: any = {
+      name: values.name,
+      description: values.description,
+      targetBeneficiaries: values.targetBeneficiaries,
       startDate: new Date(values.startDate).toISOString(),
-      endDate: new Date(values.endDate).toISOString(),
+    }
+    if (values.endDate) payload.endDate = new Date(values.endDate).toISOString();
+    if (values.goal) payload.goal = Number(values.goal);
+    if (values.status) payload.status = values.status;
+
+    if (isEditMode) {
+      updateMutation.mutate(payload)
+    } else {
+      createMutation.mutate(payload)
+    }
+  }
+
+  const handleCreateClick = () => {
+    setIsEditMode(false)
+    setSelectedProject(null)
+    form.reset({
+      name: "",
+      goal: "",
+      description: "",
+      startDate: "",
+      endDate: "",
+      targetBeneficiaries: 100,
+      status: "ACTIVE", // Updated default status to match options
     })
+    setIsFormOpen(true)
+  }
+
+  const handleEditClick = (project: any) => {
+    setIsEditMode(true)
+    setSelectedProject(project)
+    form.reset({
+      name: project.name,
+      description: project.description,
+      targetBeneficiaries: project.targetBeneficiaries,
+      startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : "",
+      endDate: project.endDate ? new Date(project.endDate).toISOString().split('T')[0] : "",
+      status: project.status || "ACTIVE",
+      goal: project.goal?.toString() || "",
+    })
+    setIsFormOpen(true)
+  }
+
+  const handleViewClick = (project: any) => {
+    setSelectedProject(project)
+    setIsViewOpen(true)
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gradient inline-block mb-1 pb-1">Projects</h1>
           <p className="text-muted-foreground">Monitor ongoing and past initiatives.</p>
         </div>
         {(user?.role === 'ADMIN' || user?.role === 'NGO_STAFF') && (
-          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger asChild>
-              <Button>Create Project</Button>
+              <Button onClick={handleCreateClick}>Create Project</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle>Create New Project</DialogTitle>
+                <DialogTitle>{isEditMode ? "Edit Project" : "Create New Project"}</DialogTitle>
                 <DialogDescription>
-                  Define a new initiative and set its goals.
+                  {isEditMode ? "Update the project's details." : "Define a new initiative and set its goals."}
                 </DialogDescription>
               </DialogHeader>
               <Form {...form}>
@@ -174,9 +236,8 @@ export function Projects() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="Planning">Planning</SelectItem>
-                              <SelectItem value="Active">Active</SelectItem>
-                              <SelectItem value="Completed">Completed</SelectItem>
+                              <SelectItem value="ACTIVE">Active</SelectItem>
+                              <SelectItem value="COMPLETED">Completed</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -189,9 +250,9 @@ export function Projects() {
                     name="goal"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Project Goal</FormLabel>
+                        <FormLabel>Funding Goal ($)</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="What is the objective of this project?" {...field} />
+                          <Input type="number" placeholder="e.g. 5000" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -211,8 +272,8 @@ export function Projects() {
                     )}
                   />
                   <div className="flex justify-end pt-4">
-                    <Button type="submit" disabled={createMutation.isPending}>
-                      {createMutation.isPending ? "Saving..." : "Save Project"}
+                    <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                      {createMutation.isPending || updateMutation.isPending ? "Saving..." : "Save Project"}
                     </Button>
                   </div>
                 </form>
@@ -231,47 +292,155 @@ export function Projects() {
           No projects found.
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {projects.map((project: any) => {
             const currentCount = project.beneficiaries?.length || 0;
             const progressPercent = Math.min(100, Math.round((currentCount / project.targetBeneficiaries) * 100))
             
             return (
-              <Card key={project.id} className="flex flex-col">
-                <CardHeader>
-                  <div className="flex justify-between items-start mb-2">
-                    <Badge variant={project.status === "Completed" ? "secondary" : "default"}>
+              <Card key={project.id} className="glass-card flex flex-col rounded-none border border-white/20 dark:border-white/10 group overflow-hidden relative p-0 shadow-sm hover:shadow-xl hover:scale-[1.03] hover:-translate-y-1 hover:z-10 transition-all duration-300">
+                {/* Generic Image Placeholder Section */}
+                <div className="relative h-36 w-full bg-[#1F2937] flex items-center justify-center overflow-hidden">
+                  <div className="absolute inset-0 opacity-20 text-white" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '12px 12px' }}></div>
+                  <Heart className="w-10 h-10 text-white/20 group-hover:scale-110 transition-transform duration-700" />
+                  
+                  {/* Top-left Badge */}
+                  <div className="absolute top-3 left-3 z-20">
+                    <Badge variant={project.status === "COMPLETED" ? "secondary" : "default"} className="bg-background/90 backdrop-blur-sm text-foreground border-none px-2 py-0.5 text-[10px] shadow-sm font-medium rounded-sm">
                       {project.status}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(project.startDate).toLocaleDateString()} - {new Date(project.endDate).toLocaleDateString()}
-                    </span>
                   </div>
-                  <CardTitle>{project.name}</CardTitle>
-                  <CardDescription>{project.description || project.name}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Beneficiaries Reached</span>
-                      <span className="font-medium">{currentCount} / {project.targetBeneficiaries}</span>
+                  
+                  {/* Curved overlay effect */}
+                  <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-[150%] h-12 bg-background rounded-[100%] z-10"></div>
+                  {/* Glassmorphism subtle overlay to blend with bg-background */}
+                  <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-[150%] h-12 bg-background/50 backdrop-blur-xl rounded-[100%] z-10"></div>
+                </div>
+
+                {/* Overlapping Circular Progress */}
+                <div className="relative z-20 flex justify-center -mt-8 mb-2">
+                  <div className="w-16 h-16 rounded-full bg-background/80 backdrop-blur-md flex items-center justify-center shadow border-[3px] border-background relative">
+                     <svg className="w-full h-full transform -rotate-90 absolute inset-0">
+                        <circle cx="28" cy="28" r="25" stroke="currentColor" strokeWidth="4" fill="none" className="text-muted/30" />
+                        <circle 
+                          cx="28" 
+                          cy="28" 
+                          r="25" 
+                          stroke="url(#gradient)" 
+                          strokeWidth="4" 
+                          fill="none" 
+                          strokeDasharray="157" 
+                          strokeDashoffset={157 - (157 * progressPercent) / 100} 
+                          strokeLinecap="round" 
+                          className="transition-all duration-1000 ease-out"
+                        />
+                        <defs>
+                          <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="hsl(var(--primary))" />
+                            <stop offset="100%" stopColor="hsl(var(--secondary))" />
+                          </linearGradient>
+                        </defs>
+                     </svg>
+                     <span className="text-sm font-bold text-foreground">{progressPercent}%</span>
+                  </div>
+                </div>
+
+                <div className="px-4 pb-4 pt-1 flex flex-col flex-1 relative z-10">
+                  {/* Date / Time Remaining */}
+                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium mb-2 justify-center bg-muted/30 w-max mx-auto px-2 py-0.5 rounded-full">
+                    <Calendar className="w-3 h-3 text-primary" />
+                    {new Date(project.startDate).toLocaleDateString()} {project.endDate ? `- ${new Date(project.endDate).toLocaleDateString()}` : ''}
+                  </div>
+                  
+                  {/* Title */}
+                  <h3 className="text-base font-bold tracking-tight text-center mb-4 line-clamp-2 hover:text-primary transition-colors cursor-pointer leading-tight" onClick={() => handleViewClick(project)}>
+                    {project.name}
+                  </h3>
+                  
+                  {/* Stats Flex */}
+                  <div className="flex justify-between items-center text-xs font-medium border-t border-border/50 pt-3 mt-auto mb-4">
+                    <div className="text-center flex-1 border-r border-border/50 last:border-r-0">
+                      <span className="block text-muted-foreground text-[10px] mb-0.5 uppercase tracking-wider">Goal</span>
+                      <span className="text-foreground font-semibold">{project.targetBeneficiaries}</span>
                     </div>
-                    <Progress value={progressPercent} className="h-2" />
+                    <div className="text-center flex-1 border-r border-border/50 last:border-r-0">
+                      <span className="block text-muted-foreground text-[10px] mb-0.5 uppercase tracking-wider">Reached</span>
+                      <span className="text-foreground font-semibold">{currentCount}</span>
+                    </div>
+                    {project.goal && (
+                      <div className="text-center flex-1 border-r border-border/50 last:border-r-0">
+                        <span className="block text-muted-foreground text-[10px] mb-0.5 uppercase tracking-wider">Fund</span>
+                        <span className="text-primary font-bold">${project.goal}</span>
+                      </div>
+                    )}
                   </div>
-                </CardContent>
-                <CardFooter className="gap-2">
-                  <Button variant="outline" className="w-full hover:-translate-y-0.5 transition-all">View Details</Button>
-                  {user?.role === 'DONOR' && project.status === 'Active' && (
-                    <Button className="w-full hover:-translate-y-0.5 transition-all" asChild>
-                      <Link to={`/dashboard/donate?project=${project.id}`}>Support Project</Link>
-                    </Button>
-                  )}
-                </CardFooter>
+                  
+                  {/* Actions */}
+                  <div className="flex flex-col gap-2 mt-auto">
+                    <Button variant="outline" size="sm" className="w-full text-xs h-8" onClick={() => handleViewClick(project)}>View Details</Button>
+                    {user?.role === 'DONOR' && project.status === 'ACTIVE' && (
+                      <Button size="sm" className="w-full text-xs h-8" asChild>
+                        <Link to={`/dashboard/donate?project=${project.id}`}>Donate Now</Link>
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </Card>
             )
           })}
         </div>
       )}
+
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Project Details</DialogTitle>
+            <DialogDescription>
+              Detailed information about the project.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedProject && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-lg">{selectedProject.name}</h3>
+                <div className="flex gap-2 mt-2">
+                  <Badge variant={selectedProject.status === "COMPLETED" ? "secondary" : "default"}>
+                    {selectedProject.status}
+                  </Badge>
+                  {selectedProject.goal && (
+                    <Badge variant="outline">Goal: ${selectedProject.goal}</Badge>
+                  )}
+                </div>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <p>
+                  <span className="font-medium text-foreground">Duration:</span> {new Date(selectedProject.startDate).toLocaleDateString()} 
+                  {selectedProject.endDate ? ` - ${new Date(selectedProject.endDate).toLocaleDateString()}` : ' - Ongoing'}
+                </p>
+                <p className="mt-1">
+                  <span className="font-medium text-foreground">Target Beneficiaries:</span> {selectedProject.targetBeneficiaries}
+                </p>
+              </div>
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <h4 className="font-medium mb-2">Description</h4>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedProject.description}</p>
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-4">
+                {(user?.role === 'ADMIN' || user?.role === 'NGO_STAFF') && (
+                  <Button variant="outline" onClick={() => {
+                    setIsViewOpen(false)
+                    handleEditClick(selectedProject)
+                  }}>
+                    Edit Project
+                  </Button>
+                )}
+                <Button onClick={() => setIsViewOpen(false)}>Close</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
