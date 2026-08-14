@@ -14,8 +14,7 @@ export const validate =
       return next();
     } catch (error) {
       if (error instanceof ZodError) {
-        const zodError = error as any;
-        const errorMessage = zodError.errors.map((e: any) => e.message).join(', ');
+        const errorMessage = error.issues.map((e: any) => e.message).join(', ');
         return next(new AppError(`Validation Error: ${errorMessage}`, 400));
       }
       return next(error);
