@@ -17,9 +17,24 @@ export function Footer() {
         <div className="md:col-span-3 md:col-start-7">
           <h3 className="font-semibold text-lg mb-6 tracking-tight text-white">Navigation</h3>
           <ul className="space-y-3">
-            <li><Link to="/events" className="text-white/80 hover:text-primary transition-colors inline-block hover:translate-x-1 duration-300">Events</Link></li>
-            <li><Link to="/donate" className="text-white/80 hover:text-primary transition-colors inline-block hover:translate-x-1 duration-300">Donate</Link></li>
-            <li><Link to="/register" className="text-white/80 hover:text-primary transition-colors inline-block hover:translate-x-1 duration-300">Become a Volunteer</Link></li>
+            <li>
+              <Link to="/events" className="group relative text-white/80 hover:text-primary transition-colors duration-300 inline-block">
+                Events
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+            </li>
+            <li>
+              <Link to="/donate" className="group relative text-white/80 hover:text-primary transition-colors duration-300 inline-block">
+                Donate
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+            </li>
+            <li>
+              <Link to="/register" className="group relative text-white/80 hover:text-primary transition-colors duration-300 inline-block">
+                Become a Volunteer
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+            </li>
           </ul>
         </div>
         <div className="md:col-span-3">

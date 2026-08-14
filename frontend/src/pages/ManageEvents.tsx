@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/form"
 import { toast } from "sonner"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { getEvents, createEvent } from "@/services/events.service"
+import { getEvents, createEvent, updateEvent } from "@/services/events.service"
 
 const eventSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -49,7 +49,9 @@ const eventSchema = z.object({
 export function ManageEvents() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState<any>(null)
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['events'],
@@ -60,12 +62,26 @@ export function ManageEvents() {
     mutationFn: (data: any) => createEvent(data),
     onSuccess: () => {
       toast.success("Event created successfully!")
-      setIsCreateOpen(false)
+      setIsFormOpen(false)
       form.reset()
       queryClient.invalidateQueries({ queryKey: ['events'] })
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to create event")
+    }
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: (data: any) => updateEvent(selectedEvent?.id, data),
+    onSuccess: () => {
+      toast.success("Event updated successfully!")
+      setIsFormOpen(false)
+      form.reset()
+      setSelectedEvent(null)
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to update event")
     }
   })
 
@@ -87,29 +103,63 @@ export function ManageEvents() {
 
   function onSubmit(values: z.infer<typeof eventSchema>) {
     // Format date if needed, though backend should accept string date
-    createMutation.mutate({
+    const payload = {
         ...values,
         date: new Date(values.date).toISOString()
+    }
+    
+    if (isEditMode) {
+      updateMutation.mutate(payload)
+    } else {
+      createMutation.mutate(payload)
+    }
+  }
+
+  const handleCreateClick = () => {
+    setIsEditMode(false)
+    setSelectedEvent(null)
+    form.reset({
+      name: "",
+      date: "",
+      location: "",
+      requiredVolunteers: 10,
+      description: "",
+      status: "Upcoming",
     })
+    setIsFormOpen(true)
+  }
+
+  const handleEditClick = (event: any) => {
+    setIsEditMode(true)
+    setSelectedEvent(event)
+    form.reset({
+      name: event.name,
+      date: event.date ? new Date(event.date).toISOString().split('T')[0] : "",
+      location: event.location,
+      requiredVolunteers: event.requiredVolunteers,
+      description: event.description,
+      status: event.status || "Upcoming",
+    })
+    setIsFormOpen(true)
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Manage Events</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gradient inline-block mb-1 pb-1">Manage Events</h1>
           <p className="text-muted-foreground">Create and manage NGO events and attendance.</p>
         </div>
         
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
-            <Button>Create Event</Button>
+            <Button onClick={handleCreateClick}>Create Event</Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Create New Event</DialogTitle>
+              <DialogTitle>{isEditMode ? "Edit Event" : "Create New Event"}</DialogTitle>
               <DialogDescription>
-                Add a new event to the platform. Fill in the details below.
+                {isEditMode ? "Update the event details below." : "Add a new event to the platform. Fill in the details below."}
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -208,8 +258,8 @@ export function ManageEvents() {
                   )}
                 />
                 <div className="flex justify-end pt-4">
-                  <Button type="submit" disabled={createMutation.isPending}>
-                    {createMutation.isPending ? "Saving..." : "Save Event"}
+                  <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                    {createMutation.isPending || updateMutation.isPending ? "Saving..." : "Save Event"}
                   </Button>
                 </div>
               </form>
@@ -218,7 +268,7 @@ export function ManageEvents() {
         </Dialog>
       </div>
 
-      <div className="rounded-md border bg-card">
+      <div className="rounded-2xl border-t border-l border-white/40 dark:border-white/10 glass-card overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -291,7 +341,7 @@ export function ManageEvents() {
                         </div>
                       </DialogContent>
                     </Dialog>
-                    <Button variant="outline" size="sm">Edit</Button>
+                    <Button variant="outline" size="sm" onClick={() => handleEditClick(event)}>Edit</Button>
                   </TableCell>
                 </TableRow>
               ))

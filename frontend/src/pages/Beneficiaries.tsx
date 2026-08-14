@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/form"
 import { toast } from "sonner"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { getBeneficiaries, createBeneficiary } from "@/services/beneficiaries.service"
+import { getBeneficiaries, createBeneficiary, updateBeneficiary } from "@/services/beneficiaries.service"
 import { getProjects } from "@/services/projects.service"
 
 const beneficiarySchema = z.object({
@@ -48,7 +48,9 @@ const beneficiarySchema = z.object({
 export function Beneficiaries() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const [isAddOpen, setIsAddOpen] = useState(false)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [selectedBeneficiary, setSelectedBeneficiary] = useState<any>(null)
 
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
@@ -64,12 +66,26 @@ export function Beneficiaries() {
     mutationFn: (data: any) => createBeneficiary(data),
     onSuccess: () => {
       toast.success("Beneficiary added successfully!")
-      setIsAddOpen(false)
+      setIsFormOpen(false)
       form.reset()
       queryClient.invalidateQueries({ queryKey: ['beneficiaries'] })
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to add beneficiary")
+    }
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: (data: any) => updateBeneficiary(selectedBeneficiary?.id, data),
+    onSuccess: () => {
+      toast.success("Beneficiary updated successfully!")
+      setIsFormOpen(false)
+      form.reset()
+      setSelectedBeneficiary(null)
+      queryClient.invalidateQueries({ queryKey: ['beneficiaries'] })
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to update beneficiary")
     }
   })
 
@@ -88,29 +104,61 @@ export function Beneficiaries() {
   }
 
   function onSubmit(values: z.infer<typeof beneficiarySchema>) {
-    createMutation.mutate({
+    const payload = {
       ...values,
       needs: values.program,
+    }
+    
+    if (isEditMode) {
+      updateMutation.mutate(payload)
+    } else {
+      createMutation.mutate(payload)
+    }
+  }
+
+  const handleCreateClick = () => {
+    setIsEditMode(false)
+    setSelectedBeneficiary(null)
+    form.reset({
+      name: "",
+      location: "",
+      program: "",
+      status: "Pending",
+      projectId: "",
     })
+    setIsFormOpen(true)
+  }
+
+  const handleEditClick = (beneficiary: any) => {
+    setIsEditMode(true)
+    setSelectedBeneficiary(beneficiary)
+    form.reset({
+      name: beneficiary.name || "",
+      location: beneficiary.location || "",
+      program: beneficiary.needs || beneficiary.program || "",
+      status: beneficiary.status || "Pending",
+      projectId: beneficiary.projectId || "",
+    })
+    setIsFormOpen(true)
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Beneficiaries</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gradient inline-block mb-1 pb-1">Beneficiaries</h1>
           <p className="text-muted-foreground">Manage and track individuals and communities receiving aid.</p>
         </div>
         
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
-            <Button>Add Beneficiary</Button>
+            <Button onClick={handleCreateClick}>Add Beneficiary</Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Add New Beneficiary</DialogTitle>
+              <DialogTitle>{isEditMode ? "Update Beneficiary" : "Add New Beneficiary"}</DialogTitle>
               <DialogDescription>
-                Register a new beneficiary in the system.
+                {isEditMode ? "Update beneficiary details." : "Register a new beneficiary in the system."}
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -201,8 +249,8 @@ export function Beneficiaries() {
                   )}
                 />
                 <div className="flex justify-end pt-4">
-                  <Button type="submit" disabled={createMutation.isPending}>
-                    {createMutation.isPending ? "Saving..." : "Save Beneficiary"}
+                  <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                    {createMutation.isPending || updateMutation.isPending ? "Saving..." : "Save Beneficiary"}
                   </Button>
                 </div>
               </form>
@@ -211,7 +259,7 @@ export function Beneficiaries() {
         </Dialog>
       </div>
 
-      <div className="rounded-md border bg-card">
+      <div className="rounded-2xl border-t border-l border-white/40 dark:border-white/10 glass-card overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -247,7 +295,7 @@ export function Beneficiaries() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="outline" size="sm">Update</Button>
+                    <Button variant="outline" size="sm" onClick={() => handleEditClick(ben)}>Update</Button>
                     <Button variant="outline" size="sm">View History</Button>
                   </TableCell>
                 </TableRow>

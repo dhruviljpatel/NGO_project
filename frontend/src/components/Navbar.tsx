@@ -8,11 +8,11 @@ export function Navbar() {
   const navigate = useNavigate()
 
   return (
-    <nav className="glass-panel sticky top-0 z-50 transition-all duration-300">
+    <nav className="fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 bg-background/20 backdrop-blur-[24px] border-b border-white/20 dark:border-white/10 shadow-sm">
       <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 font-bold text-2xl tracking-tight text-foreground">
-          <Heart className="h-6 w-6 text-primary fill-primary" />
-          Hope<span className="text-primary font-serif italic">Bridge</span>
+        <Link to="/" className="flex items-center gap-2 font-bold text-2xl tracking-tight text-foreground group transition-all duration-300 hover:scale-[1.03] active:scale-95 active:opacity-80 hover:drop-shadow-[0_0_12px_rgba(236,72,153,0.4)]">
+          <Heart className="h-6 w-6 text-primary fill-primary group-hover:animate-pulse" />
+          <span><span className="text-gradient">Hope</span><span className="text-foreground">Bridge</span></span>
         </Link>
         <div className="flex items-center gap-6">
           <Link to="/events" className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors">
@@ -24,19 +24,19 @@ export function Navbar() {
           <div className="h-4 w-px bg-border/50" />
           {user ? (
             <>
-              <Button variant="ghost" className="font-semibold text-foreground/80 hover:text-primary" asChild>
+              <Button variant="ghost" asChild>
                 <Link to="/dashboard">Dashboard</Link>
               </Button>
-              <Button variant="outline" className="rounded-full px-6" onClick={() => { logout(); navigate('/'); }}>
+              <Button variant="outline" onClick={() => { logout(); navigate('/'); }}>
                 Logout
               </Button>
             </>
           ) : (
             <>
-              <Button variant="ghost" className="font-semibold text-foreground/80 hover:text-primary" asChild>
+              <Button variant="ghost" asChild>
                 <Link to="/login">Login</Link>
               </Button>
-              <Button className="rounded-full px-6 shadow-md shadow-primary/20 hover:-translate-y-0.5" asChild>
+              <Button variant="secondary" asChild>
                 <Link to="/register">Register</Link>
               </Button>
             </>

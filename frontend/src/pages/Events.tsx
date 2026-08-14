@@ -48,7 +48,7 @@ export function Events() {
           <Button variant="ghost" className="mb-4 -ml-4 text-foreground/60 hover:text-foreground" onClick={() => navigate(-1)}>
             <ArrowLeft className="w-4 h-4 mr-2" /> Back
           </Button>
-          <h1 className="text-4xl font-bold tracking-tight mb-2 text-balance">Volunteer Events</h1>
+          <h1 className="text-4xl font-bold tracking-tight mb-2 text-balance text-gradient inline-block pb-1">Volunteer Events</h1>
           <p className="text-foreground/70 text-lg">Discover and register for upcoming opportunities to make a difference.</p>
         </div>
       </div>
@@ -93,7 +93,8 @@ export function Events() {
             </div>
           ) : (
             events.map((event: any, index: number) => (
-              <Card key={event.id} className="flex flex-col hover:-translate-y-1 transition-transform duration-300" style={{ animationDelay: `${index * 100}ms` }}>
+              <Card key={event.id} className="glass-card flex flex-col hover:-translate-y-1 transition-all duration-300 rounded-2xl border-t border-l border-white/40 dark:border-white/10 group relative overflow-hidden" style={{ animationDelay: `${index * 100}ms` }}>
+                <div className="absolute -inset-2 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <CardHeader>
                   <div className="flex justify-between items-start mb-3">
                     <Badge variant={event.status === "Full" ? "secondary" : "default"} className="px-3 py-1 text-xs">

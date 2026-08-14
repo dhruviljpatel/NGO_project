@@ -35,41 +35,47 @@ export function Dashboard() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-12">
-        <Card className="lg:col-span-5 hover:-translate-y-1 transition-transform duration-300">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-foreground/70 uppercase tracking-wider">
+        <Card className="glass-card lg:col-span-5 relative overflow-hidden group border-t border-l border-white/40 dark:border-white/10 rounded-2xl">
+          <div className="absolute -inset-2 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <CardHeader className="pb-2 relative z-10">
+            <CardTitle className="text-sm font-semibold text-foreground/70 uppercase tracking-widest flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
               {user?.role === 'VOLUNTEER' ? 'Total Hours' : 'Total Volunteers'}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-5xl font-bold tracking-tighter text-primary">
+          <CardContent className="relative z-10">
+            <div className="text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-primary to-secondary drop-shadow-sm">
               {user?.role === 'VOLUNTEER' ? '0' : isLoadingVolunteers ? '...' : volunteers.length}
             </div>
-            <p className="text-sm text-foreground/60 mt-2">Currently registered in the system</p>
+            <p className="text-sm font-medium text-foreground/60 mt-2">Currently registered in the system</p>
           </CardContent>
         </Card>
-        
-        <Card className="lg:col-span-4 hover:-translate-y-1 transition-transform duration-300 bg-primary text-primary-foreground border-transparent shadow-lg shadow-primary/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-primary-foreground/80 uppercase tracking-wider">Upcoming Events</CardTitle>
+        <Card className="glass-card lg:col-span-4 relative overflow-hidden group border-t border-l border-white/40 dark:border-white/10 rounded-2xl bg-gradient-to-br from-primary/90 to-secondary/90 text-primary-foreground border-transparent shadow-xl shadow-primary/20">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+          <CardHeader className="pb-2 relative z-10">
+            <CardTitle className="text-sm font-semibold text-primary-foreground/90 uppercase tracking-widest">Upcoming Events</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-5xl font-bold tracking-tighter">
+          <CardContent className="relative z-10">
+            <div className="text-6xl font-black tracking-tighter drop-shadow-md">
               {isLoadingEvents ? '...' : upcomingEventsCount}
             </div>
-            <p className="text-sm text-primary-foreground/80 mt-2">Events requiring attention</p>
+            <p className="text-sm font-medium text-primary-foreground/80 mt-2">Events requiring attention</p>
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-3 hover:-translate-y-1 transition-transform duration-300">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-foreground/70 uppercase tracking-wider">Active Projects</CardTitle>
+        <Card className="glass-card lg:col-span-3 relative overflow-hidden group border-t border-l border-white/40 dark:border-white/10 rounded-2xl">
+          <div className="absolute -inset-2 bg-gradient-to-br from-secondary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <CardHeader className="pb-2 relative z-10">
+            <CardTitle className="text-sm font-semibold text-foreground/70 uppercase tracking-widest flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+              Active Projects
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold tracking-tighter">
+          <CardContent className="relative z-10">
+            <div className="text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-secondary to-primary drop-shadow-sm">
               {isLoadingProjects ? '...' : activeProjectsCount}
             </div>
-            <p className="text-sm text-foreground/60 mt-2">Ongoing initiatives</p>
+            <p className="text-sm font-medium text-foreground/60 mt-2">Ongoing initiatives</p>
           </CardContent>
         </Card>
       </div>
