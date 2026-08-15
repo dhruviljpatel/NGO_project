@@ -1,13 +1,13 @@
 import { useState } from "react"
 import { useAuth } from "@/lib/auth"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Calendar, MapPin, Users, ArrowLeft } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
 import { useNavigate } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { getEvents, registerForEvent } from "@/services/events.service"
+import { EventCarousel } from "@/components/EventCarousel"
 
 export function Events() {
   const { user } = useAuth()
@@ -43,13 +43,13 @@ export function Events() {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12 animate-in fade-in duration-700">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <Button variant="ghost" className="mb-4 -ml-4 text-foreground/60 hover:text-foreground" onClick={() => navigate(-1)}>
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back
-          </Button>
-          <h1 className="text-4xl font-bold tracking-tight mb-2 text-balance text-gradient inline-block pb-1">Volunteer Events</h1>
-          <p className="text-foreground/70 text-lg">Discover and register for upcoming opportunities to make a difference.</p>
+      <div className="mb-10">
+        <Button variant="ghost" className="mb-6 text-foreground/60 hover:text-foreground" onClick={() => navigate(-1)}>
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back
+        </Button>
+        <div className="text-center flex flex-col items-center">
+          <h1 className="text-4xl font-bold tracking-tight mb-3 text-balance text-gradient inline-block pb-1">Volunteer Events</h1>
+          <p className="text-foreground/70 text-lg max-w-2xl text-center">Discover and register for upcoming opportunities to make a difference.</p>
         </div>
       </div>
 
@@ -84,52 +84,14 @@ export function Events() {
           <p className="text-sm opacity-80 mt-1">Please try again later.</p>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {events.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center p-20 border border-dashed rounded-3xl bg-card/30 text-foreground/70">
-              <Calendar className="w-12 h-12 text-primary/40 mb-4" />
-              <h3 className="text-xl font-semibold text-foreground">No upcoming events</h3>
-              <p className="text-sm mt-2 text-center max-w-sm">We are currently planning our next initiatives. Check back soon or ensure you are registered to receive updates.</p>
-            </div>
-          ) : (
-            events.map((event: any, index: number) => (
-              <Card key={event.id} className="glass-card flex flex-col hover:-translate-y-1 transition-all duration-300 rounded-2xl border-t border-l border-white/40 dark:border-white/10 group relative overflow-hidden" style={{ animationDelay: `${index * 100}ms` }}>
-                <div className="absolute -inset-2 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <CardHeader>
-                  <div className="flex justify-between items-start mb-3">
-                    <Badge variant={event.status === "Full" ? "secondary" : "default"} className="px-3 py-1 text-xs">
-                      {event.status}
-                    </Badge>
-                    <Badge variant="outline" className="flex gap-1.5 items-center px-3 py-1">
-                      <Users className="w-3.5 h-3.5" />
-                      <span className="font-medium text-xs">{event.registeredVolunteers || 0}/{event.requiredVolunteers}</span>
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-xl leading-tight">{event.name}</CardTitle>
-                  <CardDescription className="flex flex-col gap-2.5 mt-4">
-                    <span className="flex items-center gap-2.5 text-foreground/80 text-sm font-medium">
-                      <Calendar className="w-4 h-4 text-primary" /> {new Date(event.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                    </span>
-                    <span className="flex items-center gap-2.5 text-foreground/80 text-sm font-medium">
-                      <MapPin className="w-4 h-4 text-primary" /> {event.location}
-                    </span>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  <p className="text-sm text-foreground/60 leading-relaxed">{event.description}</p>
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    className="w-full gap-2 rounded-xl h-11 text-sm font-semibold shadow-md" 
-                    disabled={event.status === "Full" || registeredLocal[event.id] || (user && user.role !== 'VOLUNTEER') || registerMutation.isPending}
-                    onClick={() => handleRegister(event.id)}
-                  >
-                    {registeredLocal[event.id] ? "Registered" : event.status === "Full" ? "Event Full" : registerMutation.isPending ? "Registering..." : "Register Now"}
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))
-          )}
+        <div className="-mx-6">
+          <EventCarousel 
+            events={events} 
+            user={user} 
+            registeredLocal={registeredLocal} 
+            isPending={registerMutation.isPending} 
+            onRegister={handleRegister} 
+          />
         </div>
       )}
     </div>

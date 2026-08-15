@@ -73,7 +73,7 @@ function HomePage() {
                         <img
                             src={heroImage}
                             alt="Community"
-                            className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-[10000ms] ease-out group-hover:scale-105"
+                            className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.02]"
                         />
                         {/* Subtle gradient overlay to blend the edge slightly if desired, though user said borderless. A very light overlay helps text legibility if they overlap, but since it's a flex-row they shouldn't. */}
                         <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent lg:hidden pointer-events-none"></div>

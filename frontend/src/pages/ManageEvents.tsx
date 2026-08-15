@@ -104,8 +104,13 @@ export function ManageEvents() {
   function onSubmit(values: z.infer<typeof eventSchema>) {
     // Format date if needed, though backend should accept string date
     const payload = {
-        ...values,
-        date: new Date(values.date).toISOString()
+        name: values.name,
+        date: new Date(values.date).toISOString(),
+        location: values.location,
+        description: values.description,
+        capacity: values.requiredVolunteers,
+        duration: 2,
+        status: values.status ? values.status.toUpperCase().replace(/ /g, '_') : 'UPCOMING'
     }
     
     if (isEditMode) {
@@ -136,9 +141,9 @@ export function ManageEvents() {
       name: event.name,
       date: event.date ? new Date(event.date).toISOString().split('T')[0] : "",
       location: event.location,
-      requiredVolunteers: event.requiredVolunteers,
+      requiredVolunteers: event.capacity || 10,
       description: event.description,
-      status: event.status || "Upcoming",
+      status: event.status ? event.status.replace(/_/g, ' ').replace(/\w\S*/g, (w: string) => (w.replace(/^\w/, (c) => c.toUpperCase()))) : "Upcoming",
     })
     setIsFormOpen(true)
   }
@@ -299,10 +304,10 @@ export function ManageEvents() {
                   <TableCell className="font-medium">{event.name}</TableCell>
                   <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
                   <TableCell>{event.location}</TableCell>
-                  <TableCell>{event.registeredVolunteers || 0} / {event.requiredVolunteers}</TableCell>
+                  <TableCell>{event._count?.registrations || 0} / {event.capacity}</TableCell>
                   <TableCell>
-                    <Badge variant={event.status === 'Upcoming' ? 'default' : 'secondary'}>
-                      {event.status}
+                    <Badge variant={event.status === 'UPCOMING' ? 'default' : 'secondary'}>
+                      {event.status ? event.status.replace(/_/g, ' ') : ''}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right space-x-2">
