@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Heart, ArrowLeft } from "lucide-react"
+import { Heart } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
-import { useNavigate, Link } from "react-router-dom"
+import { Link } from "react-router-dom"
+import { BackButton } from "@/components/BackButton"
 import {
   Table,
   TableBody,
@@ -23,7 +24,6 @@ import { getProjects } from "@/services/projects.service"
 
 export function Donations() {
   const { user } = useAuth()
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [amount, setAmount] = useState("")
   const [selectedProjectId, setSelectedProjectId] = useState<string>("general")
@@ -71,9 +71,9 @@ export function Donations() {
   return (
     <div className="space-y-8 max-w-5xl mx-auto flex flex-col min-h-[calc(100vh-12rem)] justify-center py-8">
       <div>
-        <Button variant="ghost" className="mb-4 -ml-4" onClick={() => navigate(-1)}>
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back
-        </Button>
+        <div className="mb-4 -ml-4">
+          <BackButton className="scale-75 origin-left" />
+        </div>
       </div>
 
       {!user ? (

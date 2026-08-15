@@ -1,17 +1,14 @@
 import { useState } from "react"
 import { useAuth } from "@/lib/auth"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
-import { useNavigate } from "react-router-dom"
+import { BackButton } from "@/components/BackButton"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { getEvents, registerForEvent } from "@/services/events.service"
 import { EventCarousel } from "@/components/EventCarousel"
 
 export function Events() {
   const { user } = useAuth()
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [registeredLocal, setRegisteredLocal] = useState<Record<string, boolean>>({})
 
@@ -44,9 +41,9 @@ export function Events() {
   return (
     <div className="max-w-6xl mx-auto px-6 py-12 animate-in fade-in duration-700">
       <div className="mb-10">
-        <Button variant="ghost" className="mb-6 text-foreground/60 hover:text-foreground" onClick={() => navigate(-1)}>
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back
-        </Button>
+        <div className="mb-6 -ml-4">
+          <BackButton className="scale-75 origin-left" />
+        </div>
         <div className="text-center flex flex-col items-center">
           <h1 className="text-4xl font-bold tracking-tight mb-3 text-balance text-gradient inline-block pb-1">Volunteer Events</h1>
           <p className="text-foreground/70 text-lg max-w-2xl text-center">Discover and register for upcoming opportunities to make a difference.</p>
