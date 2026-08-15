@@ -81,7 +81,7 @@ export function EventCarousel({ events, user, registeredLocal, isPending, onRegi
               <CardFooter className="mt-auto pt-4 relative z-20">
                 <Button 
                   className="w-full gap-2 rounded-xl h-11 text-sm font-semibold shadow-md" 
-                  disabled={!isActive || event.status === "Full" || registeredLocal[event.id] || (user && user.role !== 'VOLUNTEER') || isPending}
+                  disabled={!isActive || event.status === "Full" || registeredLocal[event.id] || (user ? user.role !== 'VOLUNTEER' : false) || isPending}
                   onClick={(e) => {
                     if (!isActive) { e.preventDefault(); return; }
                     onRegister(event.id);
