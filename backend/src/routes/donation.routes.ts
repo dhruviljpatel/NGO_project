@@ -29,8 +29,8 @@ router.get(
   donationController.getDonationById
 );
 
-router.patch(
-  '/:id/status',
+router.put(
+  '/:id',
   requireRole([Role.ADMIN, Role.NGO_STAFF]), // Only staff can confirm/fail donations
   validate(updateDonationStatusSchema),
   donationController.updateDonationStatus
