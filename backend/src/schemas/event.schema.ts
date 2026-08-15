@@ -9,7 +9,7 @@ export const createEventSchema = z.object({
     description: z.string(),
     duration: z.number().positive(),
     projectId: z.string().uuid().optional(),
-    status: z.enum(['UPCOMING', 'OPEN_FOR_REGISTRATION', 'FULL', 'COMPLETED', 'CANCELLED']).optional(),
+    status: z.enum(["UPCOMING", "OPEN_FOR_REGISTRATION", "FULL", "COMPLETED", "CANCELLED"]).optional(),
   }),
 });
 
@@ -22,13 +22,13 @@ export const updateEventSchema = z.object({
     description: z.string().optional(),
     duration: z.number().positive().optional(),
     projectId: z.string().uuid().optional(),
-    status: z.enum(['UPCOMING', 'OPEN_FOR_REGISTRATION', 'FULL', 'COMPLETED', 'CANCELLED']).optional(),
+    status: z.enum(["UPCOMING", "OPEN_FOR_REGISTRATION", "FULL", "COMPLETED", "CANCELLED"]).optional(),
   }),
 });
 
 export const eventQuerySchema = z.object({
   query: z.object({
-    status: z.enum(['UPCOMING', 'OPEN_FOR_REGISTRATION', 'FULL', 'COMPLETED', 'CANCELLED']).optional(),
+    status: z.enum(["UPCOMING", "OPEN_FOR_REGISTRATION", "FULL", "COMPLETED", "CANCELLED"]).optional(),
     projectId: z.string().uuid().optional(),
     page: z.string().regex(/^\d+$/).optional(),
     limit: z.string().regex(/^\d+$/).optional(),

@@ -2,13 +2,53 @@ import prisma from '../config/db';
 import { AppError } from '../utils/AppError';
 import { EventStatus, Role } from '@prisma/client';
 
+const mapStatusToDb = (status?: string): EventStatus | undefined => {
+  if (!status) return undefined;
+  const map: Record<string, EventStatus> = {
+    "Upcoming": "UPCOMING",
+    "Open for Registration": "OPEN_FOR_REGISTRATION",
+    "Full": "FULL",
+    "Completed": "COMPLETED",
+    "Cancelled": "CANCELLED"
+  };
+  return map[status] || (status as EventStatus);
+};
+
+const mapEventToFrontend = (event: any) => {
+  if (!event) return event;
+  const map: Record<string, string> = {
+    "UPCOMING": "Upcoming",
+    "OPEN_FOR_REGISTRATION": "Open for Registration",
+    "FULL": "Full",
+    "COMPLETED": "Completed",
+    "CANCELLED": "Cancelled"
+  };
+  if (event.status && map[event.status]) {
+    return { ...event, status: map[event.status] };
+  }
+  return event;
+};
+
 export const createEvent = async (data: any) => {
-  return await prisma.event.create({
+  const eventData = { ...data };
+  if (eventData.requiredVolunteers !== undefined) {
+    eventData.capacity = eventData.requiredVolunteers;
+    delete eventData.requiredVolunteers;
+  }
+  if (eventData.duration === undefined) {
+    eventData.duration = 2; // Default duration in hours
+  }
+  if (eventData.status) {
+    eventData.status = mapStatusToDb(eventData.status);
+  }
+
+  const createdEvent = await prisma.event.create({
     data: {
-      ...data,
+      ...eventData,
       date: new Date(data.date),
     },
   });
+  return mapEventToFrontend(createdEvent);
 };
 
 export const getEvents = async (query: any) => {
@@ -19,7 +59,7 @@ export const getEvents = async (query: any) => {
   const skip = (pageNumber - 1) * pageSize;
 
   const where: any = {};
-  if (status) where.status = status as EventStatus;
+  if (status) where.status = mapStatusToDb(status as string);
   if (projectId) where.projectId = projectId;
 
   const [events, total] = await Promise.all([
@@ -36,7 +76,8 @@ export const getEvents = async (query: any) => {
     prisma.event.count({ where }),
   ]);
 
-  return { events, meta: { page: pageNumber, limit: pageSize, total } };
+  const mappedEvents = events.map(mapEventToFrontend);
+  return { events: mappedEvents, meta: { page: pageNumber, limit: pageSize, total } };
 };
 
 export const getEventById = async (id: string) => {
@@ -55,7 +96,7 @@ export const getEventById = async (id: string) => {
   });
 
   if (!event) throw new AppError('Event not found', 404);
-  return event;
+  return mapEventToFrontend(event);
 };
 
 export const updateEvent = async (id: string, data: any) => {
@@ -64,6 +105,15 @@ export const updateEvent = async (id: string, data: any) => {
 
   const updatedData = { ...data };
   if (data.date) updatedData.date = new Date(data.date);
+
+  if (updatedData.requiredVolunteers !== undefined) {
+    updatedData.capacity = updatedData.requiredVolunteers;
+    delete updatedData.requiredVolunteers;
+  }
+  
+  if (updatedData.status) {
+    updatedData.status = mapStatusToDb(updatedData.status);
+  }
 
   // If status is CANCELLED, we should ideally notify volunteers (part of business rule)
   const updatedEvent = await prisma.event.update({
@@ -89,7 +139,7 @@ export const updateEvent = async (id: string, data: any) => {
     }
   }
 
-  return updatedEvent;
+  return mapEventToFrontend(updatedEvent);
 };
 
 export const registerForEvent = async (eventId: string, userId: string, targetVolunteerId?: string) => {

@@ -23,7 +23,7 @@ router.get(
   volunteerController.getVolunteerById
 );
 
-router.patch(
+router.put(
   '/:id',
   requireRole([Role.ADMIN, Role.NGO_STAFF, Role.VOLUNTEER]),
   validate(updateVolunteerSchema),

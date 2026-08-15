@@ -1,6 +1,55 @@
 import prisma from '../config/db';
 import { AppError } from '../utils/AppError';
 import { BeneficiaryStatus } from '@prisma/client';
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+
+export const createBeneficiary = async (data: any) => {
+  const dummyEmail = `beneficiary_${crypto.randomUUID()}@ngo.local`;
+  const passwordHash = await bcrypt.hash(crypto.randomUUID(), 10);
+
+  return await prisma.$transaction(async (tx) => {
+    const newUser = await tx.user.create({
+      data: {
+        email: dummyEmail,
+        passwordHash,
+        role: 'BENEFICIARY',
+      },
+    });
+
+    const statusMap: Record<string, BeneficiaryStatus> = {
+      'Active': 'ACTIVE',
+      'Supported': 'ACTIVE',
+      'Completed': 'INACTIVE',
+      'Pending': 'INACTIVE',
+      'In Progress': 'ACTIVE'
+    };
+
+    const newBeneficiary = await tx.beneficiaryProfile.create({
+      data: {
+        userId: newUser.id,
+        name: data.name,
+        location: data.location || 'Not Specified',
+        program: data.program || data.needs || 'Default',
+        age: data.age || 0,
+        gender: data.gender || 'Not Specified',
+        familySize: data.familySize || 1,
+        status: statusMap[data.status] || 'ACTIVE',
+      },
+    });
+
+    if (data.projectId) {
+      await tx.projectBeneficiary.create({
+        data: {
+          projectId: data.projectId,
+          beneficiaryId: newBeneficiary.id,
+        }
+      });
+    }
+
+    return newBeneficiary;
+  });
+};
 
 export const getBeneficiaries = async (query: any) => {
   const { name, location, program, status, page = '1', limit = '10' } = query;

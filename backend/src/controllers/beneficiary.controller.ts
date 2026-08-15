@@ -4,6 +4,11 @@ import { catchAsync } from '../utils/catchAsync';
 import { sendResponse } from '../utils/response';
 import { Role } from '@prisma/client';
 
+export const createBeneficiary = catchAsync(async (req: Request, res: Response) => {
+  const beneficiary = await beneficiaryService.createBeneficiary(req.body);
+  sendResponse(res, 201, beneficiary, 'Beneficiary created successfully');
+});
+
 export const getBeneficiaries = catchAsync(async (req: Request, res: Response) => {
   const result = await beneficiaryService.getBeneficiaries(req.query);
   sendResponse(res, 200, result.beneficiaries, 'Beneficiaries fetched successfully', result.meta);

@@ -12,3 +12,7 @@ export const login = catchAsync(async (req: Request, res: Response) => {
   const result = await authService.loginUser(req.body);
   sendResponse(res, 200, result, 'User logged in successfully');
 });
+
+export const getCurrentUser = catchAsync(async (req: Request, res: Response) => {
+  sendResponse(res, 200, req.user, 'Current user fetched successfully');
+});

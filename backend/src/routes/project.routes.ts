@@ -26,7 +26,7 @@ router.get(
 
 router.get('/:id', projectController.getProjectById);
 
-router.patch(
+router.put(
   '/:id',
   protect,
   requireRole([Role.ADMIN, Role.NGO_STAFF]),
@@ -35,7 +35,7 @@ router.patch(
 );
 
 router.post(
-  '/:id/volunteers',
+  '/:id/assign-volunteer',
   protect,
   requireRole([Role.ADMIN, Role.NGO_STAFF]),
   validate(assignVolunteerSchema),
@@ -43,7 +43,7 @@ router.post(
 );
 
 router.post(
-  '/:id/beneficiaries',
+  '/:id/assign-beneficiary',
   protect,
   requireRole([Role.ADMIN, Role.NGO_STAFF]),
   validate(assignBeneficiarySchema),

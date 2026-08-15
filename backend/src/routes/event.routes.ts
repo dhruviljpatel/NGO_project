@@ -23,7 +23,7 @@ router.get(
 
 router.get('/:id', eventController.getEventById);
 
-router.patch(
+router.put(
   '/:id',
   protect,
   requireRole([Role.ADMIN, Role.NGO_STAFF]),
@@ -38,8 +38,8 @@ router.post(
   eventController.registerForEvent
 );
 
-router.delete(
-  '/:id/register',
+router.post(
+  '/:id/cancel',
   protect,
   requireRole([Role.ADMIN, Role.NGO_STAFF, Role.VOLUNTEER]),
   eventController.cancelRegistration

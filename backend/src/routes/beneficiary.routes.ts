@@ -9,6 +9,12 @@ const router = Router();
 
 router.use(protect);
 
+router.post(
+  '/',
+  requireRole([Role.ADMIN, Role.NGO_STAFF]),
+  beneficiaryController.createBeneficiary
+);
+
 router.get(
   '/',
   requireRole([Role.ADMIN, Role.NGO_STAFF]),
@@ -22,7 +28,7 @@ router.get(
   beneficiaryController.getBeneficiaryById
 );
 
-router.patch(
+router.put(
   '/:id',
   requireRole([Role.ADMIN, Role.NGO_STAFF]),
   validate(updateBeneficiarySchema),
