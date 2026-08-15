@@ -112,7 +112,7 @@ export function ManageEvents() {
         duration: 2,
         status: values.status ? values.status.toUpperCase().replace(/ /g, '_') : 'UPCOMING'
     }
-    
+
     if (isEditMode) {
       updateMutation.mutate(payload)
     } else {
@@ -155,7 +155,7 @@ export function ManageEvents() {
           <h1 className="text-3xl font-bold tracking-tight text-gradient inline-block mb-1 pb-1">Manage Events</h1>
           <p className="text-muted-foreground">Create and manage NGO events and attendance.</p>
         </div>
-        
+
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
             <Button onClick={handleCreateClick}>Create Event</Button>
