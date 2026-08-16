@@ -7,6 +7,8 @@ import 'express-async-errors'; // handles async errors automatically
 import { globalErrorHandler } from './middleware/error.middleware';
 import { AppError } from './utils/AppError';
 import routes from './routes';
+import swaggerUi from 'swagger-ui-express';
+import { generateOpenAPI } from './config/swagger';
 
 const app = express();
 
@@ -16,7 +18,11 @@ app.use(helmet({
 }));
 
 // Implement CORS
-app.use(cors());
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN === '*' ? '*' : process.env.CORS_ORIGIN?.split(',') || '*',
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
 // Limit requests from same API
 const limiter = rateLimit({
@@ -32,6 +38,14 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 // ROUTES
 app.use('/api/v1', routes);
+
+// Swagger Documentation
+const openApiDocument = generateOpenAPI();
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
+app.get('/api-docs.json', (req: Request, res: Response) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(openApiDocument);
+});
 
 // Handle unhandled routes
 app.all('*', (req: Request, res: Response, next: NextFunction) => {

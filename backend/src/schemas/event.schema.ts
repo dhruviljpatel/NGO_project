@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from '../utils/zod-openapi';
 
 export const createEventSchema = z.object({
   body: z.object({
