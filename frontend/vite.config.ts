@@ -22,4 +22,7 @@ export default defineConfig({
             },
         },
     },
+    preview: {
+        allowedHosts: ["ngo-project-jrb9.onrender.com"],
+    },
 })
