@@ -33,10 +33,10 @@ export function Navbar() {
             </>
           ) : (
             <>
-              <Button variant="ghost" asChild>
+              <Button variant="default" className="bg-white hover:bg-white/90" asChild>
                 <Link to="/login">Login</Link>
               </Button>
-              <Button variant="secondary" asChild>
+              <Button variant="secondary" className="bg-white hover:bg-white/90" asChild>
                 <Link to="/register">Register</Link>
               </Button>
             </>
