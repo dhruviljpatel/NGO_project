@@ -11,7 +11,9 @@ import routes from './routes';
 const app = express();
 
 // Set security HTTP headers
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // Implement CORS
 app.use(cors());
